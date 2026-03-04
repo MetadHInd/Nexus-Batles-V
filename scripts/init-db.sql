@@ -122,3 +122,6 @@ CREATE TABLE if not exists order_items (
   quantity INT NOT NULL,
   price DECIMAL(10,2) NOT NULL
 );
+
+alter table orders
+ADD COLUMN status ENUM('PENDING','PAID','CANCELLED') NOT NULL DEFAULT 'PAID';

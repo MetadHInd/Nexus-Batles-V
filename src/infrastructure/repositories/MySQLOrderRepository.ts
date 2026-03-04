@@ -7,56 +7,66 @@ export class MySQLOrderRepository implements OrderRepository {
     async createOrderWithItems(
     userId: number,
     items: { productId: number; quantity: number; price: number }[]
-    ): Promise<void> {
+): Promise<void> {
 
     const connection = await pool.getConnection();
 
     try {
-        await connection.beginTransaction();
+    await connection.beginTransaction();
 
-        let total = 0;
+    let total = 0;
 
-        for (const item of items) {
-        total += item.price * item.quantity;
+    for (const item of items) {
+      total += item.price * item.quantity;
+    }
+
+    // 1️⃣ Crear orden
+const [orderResult]: any = await connection.query(
+    "INSERT INTO orders (user_id, total, status) VALUES (?, ?, ?)",
+    [userId, total, "PAID"]
+);
+
+    const orderId = orderResult.insertId;
+
+    // 2️⃣ Insertar items + descontar stock de forma segura
+    for (const item of items) {
+
+      // Descuento seguro
+        const [stockResult]: any = await connection.query(
+        `UPDATE products
+            SET stock = stock - ?
+            WHERE id = ? AND stock >= ?`,
+        [item.quantity, item.productId, item.quantity]
+        );
+
+        if (stockResult.affectedRows === 0) {
+        throw new Error("Stock insuficiente durante confirmación");
         }
 
-      //Crear orden
-        const [orderResult]: any = await connection.query(
-        "INSERT INTO orders (user_id, total) VALUES (?, ?)",
-        [userId, total]
-        );
-
-        const orderId = orderResult.insertId;
-
-      // Crear order_items y descontar stock
-        for (const item of items) {
-
+      // Crear order item
         await connection.query(
-            "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)",
-            [orderId, item.productId, item.quantity, item.price]
+        `INSERT INTO order_items 
+            (order_id, product_id, quantity, price) 
+            VALUES (?, ?, ?, ?)`,
+        [orderId, item.productId, item.quantity, item.price]
         );
+    }
 
-        await connection.query(
-            "UPDATE products SET stock = stock - ? WHERE id = ?",
-            [item.quantity, item.productId]
-        );
-        }
-
-      // Vaciar carrito
-        await connection.query(
+    // 3️⃣ Vaciar carrito
+    await connection.query(
         "DELETE FROM cart WHERE user_id = ?",
         [userId]
-        );
+    );
 
-        await connection.commit();
+    await connection.commit();
 
     } catch (error) {
-        await connection.rollback();
-        throw error;
+    await connection.rollback();
+    throw error;
     } finally {
-        connection.release();
+    connection.release();
     }
-    }
+}
 
     async findByUser(userId: number): Promise<Order[]> {
     const [rows]: any = await pool.query(
