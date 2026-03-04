@@ -11,6 +11,7 @@ import auctionRoutes from './infrastructure/http/routes/auctionRoutes';
 import missionRoutes from './infrastructure/http/routes/missionRoutes';
 import paymentRoutes from './infrastructure/http/routes/paymentRoutes';
 import playerRoutes from './infrastructure/http/routes/playerRoutes';
+import cartRoutes from '@infrastructure/http/routes/cartRoutes';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/api/v1/players', playerRoutes);
 app.use('/api/v1/auctions', auctionRoutes);
 app.use('/api/v1/missions', missionRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use("/api/v1/cart", cartRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', env: env.NODE_ENV }));
 
