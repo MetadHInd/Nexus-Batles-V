@@ -14,8 +14,11 @@ export class GetProductRatingUseCase {
       throw new Error('El producto no existe');
     }
 
-    // Obtener calificaciones
-    const rating = await this.ratingRepository.getAverageByProduct(productId);
+    // ⚠️ Convertir productId a itemId (ej: 1 → "item-1")
+    const itemId = `item-${productId}`;
+
+    // ✅ Usar getAverageByItem (NO getAverageByProduct)
+    const rating = await this.ratingRepository.getAverageByItem(itemId);
     
     return {
       average: rating.average,
