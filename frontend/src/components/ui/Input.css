@@ -1,0 +1,27 @@
+.nbv-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(200,134,10,0.25);
+  color: var(--color-parchment);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 0.6rem;
+}
+
+.nbv-input:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px rgba(200,134,10,0.15), 0 0 15px rgba(200,134,10,0.1);
+}
+
+.nbv-input::placeholder {
+  color: var(--color-ash);
+  font-style: italic;
+}
+
+.nbv-input.error {
+  border-color: var(--color-crimson);
+  box-shadow: 0 0 0 2px rgba(168,16,32,0.15);
+}

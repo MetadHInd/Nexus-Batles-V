@@ -1,24 +1,63 @@
-// ══════════════════════════════════════════════════════
-// TIPOS COMPARTIDOS — Espejo de las entidades del backend
-// El front NUNCA calcula lógica de negocio con estos tipos,
-// solo los usa para tipar las respuestas de la API.
-// ══════════════════════════════════════════════════════
-
+// Tipos para TU backend (The Nexus Battles V)
 export type PlayerRole = 'PLAYER' | 'ADMIN' | 'MODERATOR';
+
+// Tipos de items según TU backend
+export type ItemTipo = 'Héroe' | 'Arma' | 'Armadura' | 'Habilidad' | 'Ítem' | 'Épica';
+export type ItemRareza = 'Común' | 'Rara' | 'Épica' | 'Legendaria';
+
+export interface Item {
+  id: string;
+  nombre: string;
+  tipo: ItemTipo;
+  rareza: ItemRareza;
+  imagen: string | null;
+  descripcion: string;
+  habilidades: string[];
+  efectos: string[];
+  ataque: number;
+  defensa: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublicPlayer {
+  id: string;
+  nombres: string;
+  apellidos: string;
+  email: string;
+  apodo: string;
+  avatar: string | null;
+  rol: PlayerRole;
+  emailVerified: boolean;
+  createdAt: string;
+}
+
+export interface Filters {
+  tipo?: string;
+  rareza?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface ApiError {
+  error: string;
+  message?: string;
+  details?: Record<string, string[]>;
+}
+
+// Mantener los tipos originales de Auctions y Missions si los usarás
 export type ItemRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
 export type ItemType = 'WEAPON' | 'ARMOR' | 'SPELL' | 'POTION' | 'ARTIFACT';
 export type MissionDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'LEGENDARY';
 export type MissionStatus = 'ACTIVE' | 'COMPLETED' | 'FAILED' | 'EXPIRED';
 export type AuctionStatus = 'ACTIVE' | 'CLOSED' | 'CANCELLED';
-
-export interface PublicPlayer {
-  id: string;
-  username: string;
-  role: PlayerRole;
-  rank: number;
-  gold: number;
-  xp: number;
-}
 
 export interface Bid {
   id: string;
@@ -82,22 +121,13 @@ export interface InventoryItem {
   acquiredAt: string;
 }
 
-// ── API Response wrapper
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
 }
 
-export interface ApiError {
-  success: false;
-  error: string;
-  message: string;
-  details?: Record<string, string[]>;
-}
-
-// ── Auth
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-  player: Pick<PublicPlayer, 'id' | 'username' | 'role'>;
+  player: Pick<PublicPlayer, 'id' | 'apodo' | 'rol'>;
 }

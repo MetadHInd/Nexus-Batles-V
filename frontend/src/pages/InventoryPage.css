@@ -1,0 +1,36 @@
+/* Estilos para rarity badge */
+.item-card__rarity-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-family: var(--font-heading);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 1px;
+}
+
+.item-card__rarity-badge[data-rarity="Legendaria"] {
+  background: rgba(200,134,10,0.15);
+  color: var(--color-gold-light);
+  border: 1px solid rgba(200,134,10,0.4);
+}
+
+.item-card__rarity-badge[data-rarity="Épica"] {
+  background: rgba(123,53,208,0.15);
+  color: var(--color-arcane-glow);
+  border: 1px solid rgba(123,53,208,0.4);
+}
+
+.item-card__rarity-badge[data-rarity="Rara"] {
+  background: rgba(26,127,170,0.15);
+  color: var(--color-ice-bright);
+  border: 1px solid rgba(26,127,170,0.4);
+}
+
+.item-card__rarity-badge[data-rarity="Común"] {
+  background: rgba(158,158,158,0.15);
+  color: var(--color-rune-gray);
+  border: 1px solid rgba(158,158,158,0.4);
+}

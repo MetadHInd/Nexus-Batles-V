@@ -1,0 +1,66 @@
+.nbv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: none;
+  width: 100%;
+}
+
+.nbv-btn-primary {
+  background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-bright));
+  color: var(--color-abyss);
+  clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
+  box-shadow: 0 0 20px rgba(200,134,10,0.3);
+}
+
+.nbv-btn-primary:hover {
+  box-shadow: 0 0 30px rgba(200,134,10,0.6);
+  filter: brightness(1.1);
+}
+
+.nbv-btn-danger {
+  background: linear-gradient(135deg, var(--color-blood), var(--color-crimson-bright));
+  color: var(--color-parchment);
+  clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
+  box-shadow: 0 0 20px rgba(168,16,32,0.3);
+}
+
+.nbv-btn-danger:hover {
+  box-shadow: 0 0 30px rgba(168,16,32,0.6);
+}
+
+.nbv-btn-arcane {
+  background: linear-gradient(135deg, var(--color-arcane), var(--color-arcane-bright));
+  color: var(--color-parchment);
+  clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
+  box-shadow: 0 0 20px rgba(74,21,128,0.4);
+}
+
+.nbv-btn-arcane:hover {
+  box-shadow: 0 0 30px rgba(123,53,208,0.6);
+}
+
+.nbv-btn-ghost {
+  background: transparent;
+  color: var(--color-gold);
+  border: 1px solid rgba(200,134,10,0.4);
+  clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
+}
+
+.nbv-btn-ghost:hover {
+  background: rgba(200,134,10,0.08);
+  border-color: var(--color-gold);
+}
+
+.nbv-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
