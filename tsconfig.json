@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "commonjs",
-    "lib": ["ES2022"],
+    "target": "ES2020",
+    "module": "nodenext",
+    "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -10,18 +10,12 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "moduleResolution": "nodenext",
+    "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",
-    "paths": {
-      "@domain/*": ["src/domain/*"],
-      "@application/*": ["src/application/*"],
-      "@infrastructure/*": ["src/infrastructure/*"],
-      "@config/*": ["src/config/*"]
-    }
+    "types": ["node", "jest"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests"]

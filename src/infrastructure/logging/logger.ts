@@ -1,39 +1,72 @@
 import winston from 'winston';
-import { env } from '../../config/env';
+import { config } from '../../config/index,';
+
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.json()
+);
 
 export const logger = winston.createLogger({
-  level: env.LOG_LEVEL,
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json(),
-  ),
-  defaultMeta: { service: 'nexus-battles-v' },
+  level: config.LOG_LEVEL,
+  format: logFormat,
+  defaultMeta: { service: 'nexus-battles-inventory' },
   transports: [
-    new winston.transports.Console({
-      format: env.NODE_ENV === 'development'
-        ? winston.format.combine(winston.format.colorize(), winston.format.simple())
-        : winston.format.json(),
+    new winston.transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+      maxsize: 5242880,
+      maxFiles: 5,
     }),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/audit.log', level: 'info' }),
+    new winston.transports.File({
+      filename: 'logs/combined.log',
+      maxsize: 5242880,
+      maxFiles: 5,
+    }),
   ],
 });
 
-// Helpers de auditoria
-export const audit = {
-  login: (userId: string, ip: string, success: boolean) =>
-    logger.info('auth.login', { userId, ip, success }),
-  auctionBid: (auctionId: string, bidderId: string, amount: number) =>
-    logger.info('auction.bid', { auctionId, bidderId, amount }),
-  paymentProcessed: (transactionId: string, playerId: string, amount: number) =>
-    logger.info('payment.processed', { transactionId, playerId, amount }),
-  missionCompleted: (missionId: string, playerId: string, reward: number) =>
-    logger.info('mission.completed', { missionId, playerId, reward }),
-  rankChange: (playerId: string, oldRank: number, newRank: number) =>
-    logger.info('player.rankChange', { playerId, oldRank, newRank }),
-  securityHmacFail: (ip: string, route: string) =>
-    logger.warn('security.hmacFail', { ip, route, severity: 'HIGH' }),
-  rateLimitHit: (ip: string, route: string) =>
-    logger.warn('security.rateLimitHit', { ip, route }),
+if (config.NODE_ENV !== 'production') {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    })
+  );
+}
+
+// ✅ ACTUALIZAR: Agregar email como opcional
+export const logAuthEvent = (event: 'login' | 'logout', data: {
+  userId?: string;
+  email?: string; // ← AGREGAR ESTO
+  ip: string;
+  userAgent: string;
+  success: boolean;
+  reason?: string;
+}) => {
+  logger.info(`auth.${event}`, {
+    ...data,
+    timestamp: new Date().toISOString(),
+  });
+};
+
+export const logSecurityEvent = (event: string, data: {
+  ip: string;
+  route?: string;
+  payload?: any;
+}) => {
+  logger.warn(`security.${event}`, {
+    ...data,
+    timestamp: new Date().toISOString(),
+    alert: 'CRITICAL',
+  });
+};
+
+export const logInventoryEvent = (event: string, data: any) => {
+  logger.info(`inventory.${event}`, {
+    ...data,
+    timestamp: new Date().toISOString(),
+  });
 };

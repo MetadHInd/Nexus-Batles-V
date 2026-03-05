@@ -1,64 +1,158 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
-import { env } from './config/env';
+import { config } from '../src/config/index,';
 import { logger } from './infrastructure/logging/logger';
-import { errorHandler } from './infrastructure/http/middlewares/errorHandler';
-import { testConnection } from './infrastructure/database/connection';
-import authRoutes from './infrastructure/http/routes/authRoutes';
-import auctionRoutes from './infrastructure/http/routes/auctionRoutes';
-import missionRoutes from './infrastructure/http/routes/missionRoutes';
-import paymentRoutes from './infrastructure/http/routes/paymentRoutes';
-import playerRoutes from './infrastructure/http/routes/playerRoutes';
-import cartRoutes from '@infrastructure/http/routes/cartRoutes';
+import { errorHandler } from './infrastructure/http/middlewares/errorHandler.middleware';
+import { generalLimiter } from './infrastructure/http/middlewares/rateLimiter.middleware';
+
+// Adaptadores
+import { UserRepositoryMySQL } from './infrastructure/persitence/repositories/UserRepositoryMysql';
+import { ItemRepositoryMySQL } from './infrastructure/persitence/repositories/ItemRepositoryMySQL';
+import { BcryptHasher } from './infrastructure/security/BcrypHasher';
+import { JwtTokenService } from './infrastructure/security/JwtTokenServices';
+import { EmailService } from './infrastructure/gateways/EmailService';
+
+// Use Cases
+import { RegisterUser } from './application/usecases/auth/RegisterUser';
+import { LoginUser } from './application/usecases/auth/LoginUser';
+
+import { SearchItems } from './application/usecases/inventory/SearchItem';
+import { GetItems } from './application/usecases/inventory/GetItem';
+import { GetItemById } from './application/usecases/inventory/GetItemById';
+import { DeleteItem } from './application/usecases/inventory/DeleteItem';
+
+// Controllers
+import { AuthController } from './infrastructure/http/controllers/AuthController';
+import { InventoryController } from './infrastructure/http/controllers/InventoryController';
+
+// Routes
+import { createAuthRoutes } from './infrastructure/http/routes/auth.routes';
+import { createInventoryRoutes } from './infrastructure/http/routes/inventory.routes';
+
+// ============================================
+// DEPENDENCY INJECTION
+// ============================================
+
+// Repositories
+const userRepository = new UserRepositoryMySQL();
+const itemRepository = new ItemRepositoryMySQL();
+
+// Services
+const passwordHasher = new BcryptHasher();
+const tokenService = new JwtTokenService();
+const emailService = new EmailService();
+
+// Use Cases - Auth
+const registerUser = new RegisterUser(
+  userRepository,
+  passwordHasher,
+  tokenService,
+  emailService
+);
+
+
+const loginUser = new LoginUser(
+  userRepository,
+  passwordHasher,
+  tokenService
+);
+
+// Use Cases - Inventory
+const searchItems = new SearchItems(itemRepository);
+const getItems = new GetItems(itemRepository);
+const getItemById = new GetItemById(itemRepository);
+const deleteItem = new DeleteItem(itemRepository);
+
+// Controllers
+const authController = new AuthController(registerUser, loginUser);
+const inventoryController = new InventoryController(
+  searchItems,
+  getItems,
+  getItemById,
+  deleteItem
+);
+
+// ============================================
+// EXPRESS APP
+// ============================================
 
 const app = express();
 
-// ============ SEGURIDAD PERIMETRAL ============
+// Security middlewares
 app.use(helmet());
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cors({
+  origin: config.CORS_ORIGIN,
+  credentials: true,
+}));
 
-// Capturar raw body para validacion HMAC en webhooks
-app.use((req, _res, next) => {
-  let data = '';
-  req.on('data', chunk => { data += chunk; });
-  req.on('end', () => { (req as any).rawBody = data; next(); });
+// Body parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting
+app.use(generalLimiter);
+
+// Request ID middleware
+app.use((req, res, next) => {
+  req.headers['x-request-id'] = req.headers['x-request-id'] || 
+    `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  next();
 });
 
-app.use(express.json());
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    module: 'Inventario de Jugador',
+    architecture: 'Hexagonal (Ports & Adapters)',
+    version: '2.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
 
-// Rate limiting global
-const globalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true });
-const sensitiveLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true });
+// API Routes (versioned)
+app.use('/api/v1/auth', createAuthRoutes(authController));
+app.use('/api/v1/inventory', createInventoryRoutes(inventoryController));
 
-app.use('/api', globalLimiter);
-app.use('/api/v1/auth', sensitiveLimiter);
-app.use('/api/v1/payments', sensitiveLimiter);
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
 
-// ============ RUTAS ============
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/players', playerRoutes);
-app.use('/api/v1/auctions', auctionRoutes);
-app.use('/api/v1/missions', missionRoutes);
-app.use('/api/v1/payments', paymentRoutes);
-app.use("/api/v1/cart", cartRoutes);
-
-app.get('/health', (_req, res) => res.json({ status: 'ok', env: env.NODE_ENV }));
-
-// ============ ERROR HANDLER GLOBAL ============
+// Error handler
 app.use(errorHandler);
 
-// ============ ARRANQUE ============
-async function bootstrap() {
-  await testConnection();
-  logger.info('Conexion a MySQL establecida');
-  app.listen(env.PORT, () => {
-    logger.info(`Servidor corriendo en puerto ${env.PORT} [${env.NODE_ENV}]`);
+// ============================================
+// START SERVER
+// ============================================
+
+const PORT = config.PORT;
+
+if (config.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    logger.info('server.started', {
+      port: PORT,
+      environment: config.NODE_ENV,
+    });
+
+    console.log('\n  THE NEXUS BATTLES V - Inventario de Jugador');
+    console.log('═'.repeat(70));
+    console.log(` Servidor: http://localhost:${PORT}`);
+    console.log(` Health: GET http://localhost:${PORT}/health`);
+    console.log('\n ENDPOINTS DISPONIBLES:');
+    console.log('  ┌─ Autenticación');
+    console.log('  │  └─ POST /api/v1/auth/register           (SCRUM-42)');
+    console.log('  │');
+    console.log('  └─ Inventario');
+    console.log('     ├─ GET  /api/v1/inventory/search?q=     (SCRUM-31)');
+    console.log('     ├─ GET  /api/v1/inventory?tipo=&rareza= (Listar con filtros)');
+    console.log('     ├─ GET  /api/v1/inventory/:id           (Detalle)');
+    console.log('     └─ DELETE /api/v1/inventory/:id         (SCRUM-37)');
+    console.log('═'.repeat(70));
+    console.log('Cumplimiento: Módulo 6.1 - Inventario de Jugador');
+    console.log('Arquitectura según documento oficial v2.0\n');
   });
 }
 
-bootstrap().catch(err => {
-  logger.error('Error al iniciar el servidor', { error: err });
-  process.exit(1);
-});
+export default app;
