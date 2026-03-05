@@ -1,83 +1,112 @@
-/* ══════════════════════════════════════════
-   THE NEXUS BATTLES V — Design Tokens
-   Importar en todos los componentes via :root
-══════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   THE NEXUS BATTLES V — globals.css
+══════════════════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
 
+/* ── Reset ────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ══ DESIGN TOKENS ══════════════════════════════════════════ */
 :root {
-  /* Backgrounds */
-  --color-abyss:        #0A0705;
-  --color-dungeon:      #120E0A;
-  --color-stone-dark:   #1C1510;
-  --color-stone:        #2A1F16;
-  --color-stone-light:  #3D2E22;
+  /* Backgrounds / profundidad */
+  --abyss:          #0A0705;
+  --dungeon:        #120E0A;
+  --stone-dark:     #1C1510;
+  --stone:          #2A1F16;
+  --stone-light:    #3D2E22;
 
-  /* Gold (primary) */
-  --color-gold-deep:    #5C3D00;
-  --color-gold-dark:    #8B5E00;
-  --color-gold:         #C8860A;
-  --color-gold-bright:  #E8A020;
-  --color-gold-light:   #F5C842;
+  /* Dorado (primario) */
+  --gold-deep:      #5C3D00;
+  --gold-dark:      #8B5E00;
+  --gold:           #C8860A;
+  --gold-bright:    #E8A020;
+  --gold-light:     #F5C842;
 
-  /* Crimson (danger/combat) */
-  --color-blood:        #7A0010;
-  --color-crimson:      #A81020;
-  --color-crimson-bright: #D42030;
+  /* Carmesí (peligro / combate) */
+  --blood-dark:     #3D0000;
+  --blood:          #7A0010;
+  --crimson:        #A81020;
+  --crimson-bright: #D42030;
 
-  /* Arcane (missions/magic) */
-  --color-arcane-dark:  #1A0A2E;
-  --color-arcane:       #4A1580;
-  --color-arcane-bright:#7B35D0;
-  --color-arcane-glow:  #B06EFF;
+  /* Arcano (misiones / magia) */
+  --arcane-dark:    #1A0A2E;
+  --arcane:         #4A1580;
+  --arcane-bright:  #7B35D0;
+  --arcane-glow:    #B06EFF;
 
-  /* Emerald (success) */
-  --color-emerald:      #1A8C45;
-  --color-emerald-bright:#28C060;
+  /* Esmeralda (éxito) */
+  --venom:          #0D5A28;
+  --emerald:        #1A8C45;
+  --emerald-bright: #28C060;
 
-  /* Ice (rare items) */
-  --color-ice:          #1A7FAA;
-  --color-ice-bright:   #30B8E8;
+  /* Hielo (rareza rara) */
+  --frost:          #0A4060;
+  --ice:            #1A7FAA;
+  --ice-bright:     #30B8E8;
 
-  /* Text */
-  --color-parchment:    #F0DEB0;
-  --color-parchment-dim:#B89A6A;
-  --color-rune-gray:    #7A6A58;
-  --color-ash:          #4A3D32;
+  /* Texto */
+  --parchment:      #F0DEB0;
+  --parchment-dim:  #B89A6A;
+  --rune-gray:      #7A6A58;
+  --ash:            #4A3D32;
 
-  /* Item rarity */
+  /* Rareza de ítems */
   --rarity-common:    #9E9E9E;
   --rarity-rare:      #1A7FAA;
   --rarity-epic:      #7B35D0;
   --rarity-legendary: #C8860A;
 
-  /* Typography */
+  /* Tipografía */
   --font-title:   'Cinzel Decorative', serif;
   --font-heading: 'Cinzel', serif;
   --font-body:    'Crimson Text', serif;
 
-  /* Spacing */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-12: 3rem;
+  /* Layout */
+  --nav-height:     56px;
+  --sidebar-width:  240px;
+
+  /* Transiciones */
+  --transition-fast: 150ms ease;
+  --transition-med:  250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* Sombras */
+  --shadow-gold:   0 0 20px rgba(200,134,10,0.3);
+  --shadow-arcane: 0 0 20px rgba(74,21,128,0.4);
+  --shadow-deep:   0 8px 32px rgba(0,0,0,0.7);
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ══ BASE ════════════════════════════════════════════════════ */
+html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
-  background: var(--color-abyss);
-  color: var(--color-parchment);
+  background-color: var(--abyss);
+  color: var(--parchment);
   font-family: var(--font-body);
-  font-size: 17px;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-x: hidden;
   min-height: 100vh;
 }
 
-#root { min-height: 100vh; }
+/* ══ TEXTURA DE PIEDRA (fondo global) ═══════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
 
+#root { position: relative; z-index: 1; }
+
+/* ══ SCROLLBAR MEDIEVAL ════════════════════════════════════ */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-abyss); }
 ::-webkit-scrollbar-thumb { background: var(--color-gold-dark); border-radius: 3px; }
