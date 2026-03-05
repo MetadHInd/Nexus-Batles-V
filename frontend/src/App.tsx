@@ -12,6 +12,7 @@ import InventoryPage from '@/pages/InventoryPage';
 import RankingsPage from '@/pages/RankingsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import EcommercePage from './pages/EcommercePage';
+import CartPage from './pages/CartPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
@@ -40,7 +41,8 @@ export default function App() {
         <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
         <Route path="/rankings" element={<ProtectedRoute><RankingsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/store" element={<EcommercePage />} />
+        <Route path="/store" element={<ProtectedRoute><EcommercePage /></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
