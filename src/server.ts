@@ -12,6 +12,7 @@ import missionRoutes from './infrastructure/http/routes/missionRoutes';
 import paymentRoutes from './infrastructure/http/routes/paymentRoutes';
 import playerRoutes from './infrastructure/http/routes/playerRoutes';
 import cartRoutes from '@infrastructure/http/routes/cartRoutes';
+import productRoutes from '@infrastructure/http/routes/productRoutes';
 
 const app = express();
 
