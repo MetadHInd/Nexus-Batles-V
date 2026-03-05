@@ -34,12 +34,12 @@ mysql -u root -p < scripts/init-db.sql
 
 ## Estructura
 ```
+
 src/
   domain/          # Logica pura — sin dependencias externas
   application/     # Casos de uso + puertos (contratos)
   infrastructure/  # Adaptadores: DB, APIs, HTTP, seguridad
   config/          # Variables de entorno validadas
-  Modulo-Chatbot   # Integración del equipo 
 ```
 
 ## Regla de Oro
