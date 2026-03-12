@@ -12,7 +12,7 @@ export class ProcessPaymentWebhookUseCase {
 
   async execute(payload: Buffer, signature: string, event: Record<string, unknown>) {
     // 1. Validar firma HMAC — rechaza si es invalida
-    const isValid = this.paymentGateway.validateWebhookSignature(payload, signature);
+const isValid = this.paymentGateway?.validateWebhookSignature?.(payload, signature);
     if (!isValid) throw new ConflictError('Firma HMAC invalida');
 
     const externalId = event['id'] as string;

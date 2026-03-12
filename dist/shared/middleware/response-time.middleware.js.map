@@ -1,0 +1,1 @@
+{"version":3,"file":"response-time.middleware.js","sourceRoot":"","sources":["../../../src/shared/middleware/response-time.middleware.ts"],"names":[],"mappings":";;;AAIA,MAAa,sBAAsB;IACjC,GAAG,CACD,IAAa,EACb,GAA+B,EAC/B,IAAkB;QAElB,GAAG,CAAC,EAAE,GAAG,IAAI,CAAC,GAAG,EAAE,CAAC;QACpB,IAAI,EAAE,CAAC;IACT,CAAC;CACF;AATD,wDASC"}

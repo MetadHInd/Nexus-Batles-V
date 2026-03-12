@@ -1,0 +1,41 @@
+"use strict";
+/**
+ * SSE (Server-Sent Events) Module - Index
+ *
+ * Exporta todos los componentes del sistema SSE para facilitar imports.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ClientMetadata = exports.SSEUser = exports.SessionId = exports.TenantId = exports.ManagerId = exports.SSERateLimit = exports.SSEAuth = exports.SSESecure = exports.SSERateLimitGuard = exports.SSEAuthGuard = exports.AuthSSEController = exports.SSEMetricsController = exports.BaseSSEController = exports.SSEMetricsService = exports.SSEEventBridgeService = exports.SSEConnectionManagerService = exports.SSEModule = void 0;
+// Module
+var sse_module_1 = require("./sse.module");
+Object.defineProperty(exports, "SSEModule", { enumerable: true, get: function () { return sse_module_1.SSEModule; } });
+// Services
+var sse_connection_manager_service_1 = require("./services/sse-connection-manager.service");
+Object.defineProperty(exports, "SSEConnectionManagerService", { enumerable: true, get: function () { return sse_connection_manager_service_1.SSEConnectionManagerService; } });
+var sse_event_bridge_service_1 = require("./services/sse-event-bridge.service");
+Object.defineProperty(exports, "SSEEventBridgeService", { enumerable: true, get: function () { return sse_event_bridge_service_1.SSEEventBridgeService; } });
+var sse_metrics_service_1 = require("./services/sse-metrics.service");
+Object.defineProperty(exports, "SSEMetricsService", { enumerable: true, get: function () { return sse_metrics_service_1.SSEMetricsService; } });
+// Controllers
+var base_sse_controller_1 = require("./controllers/base-sse.controller");
+Object.defineProperty(exports, "BaseSSEController", { enumerable: true, get: function () { return base_sse_controller_1.BaseSSEController; } });
+var sse_metrics_controller_1 = require("./controllers/sse-metrics.controller");
+Object.defineProperty(exports, "SSEMetricsController", { enumerable: true, get: function () { return sse_metrics_controller_1.SSEMetricsController; } });
+var auth_sse_controller_1 = require("./controllers/auth-sse.controller");
+Object.defineProperty(exports, "AuthSSEController", { enumerable: true, get: function () { return auth_sse_controller_1.AuthSSEController; } });
+// Guards
+var sse_auth_guard_1 = require("./guards/sse-auth.guard");
+Object.defineProperty(exports, "SSEAuthGuard", { enumerable: true, get: function () { return sse_auth_guard_1.SSEAuthGuard; } });
+var sse_rate_limit_guard_1 = require("./guards/sse-rate-limit.guard");
+Object.defineProperty(exports, "SSERateLimitGuard", { enumerable: true, get: function () { return sse_rate_limit_guard_1.SSERateLimitGuard; } });
+// Decorators
+var sse_security_decorator_1 = require("./decorators/sse-security.decorator");
+Object.defineProperty(exports, "SSESecure", { enumerable: true, get: function () { return sse_security_decorator_1.SSESecure; } });
+Object.defineProperty(exports, "SSEAuth", { enumerable: true, get: function () { return sse_security_decorator_1.SSEAuth; } });
+Object.defineProperty(exports, "SSERateLimit", { enumerable: true, get: function () { return sse_security_decorator_1.SSERateLimit; } });
+var sse_params_decorator_1 = require("./decorators/sse-params.decorator");
+Object.defineProperty(exports, "ManagerId", { enumerable: true, get: function () { return sse_params_decorator_1.ManagerId; } });
+Object.defineProperty(exports, "TenantId", { enumerable: true, get: function () { return sse_params_decorator_1.TenantId; } });
+Object.defineProperty(exports, "SessionId", { enumerable: true, get: function () { return sse_params_decorator_1.SessionId; } });
+Object.defineProperty(exports, "SSEUser", { enumerable: true, get: function () { return sse_params_decorator_1.SSEUser; } });
+Object.defineProperty(exports, "ClientMetadata", { enumerable: true, get: function () { return sse_params_decorator_1.ClientMetadata; } });

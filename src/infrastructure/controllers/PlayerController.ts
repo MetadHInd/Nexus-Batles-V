@@ -130,7 +130,7 @@ export class PlayerController {
   // ── GET /api/v1/players/:id ──────────────────────────────────────────────────
   async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const player = await playerRepository.findById(req.params.id);
+      const player = await playerRepository.findById(req.params.id as string);
       if (!player) {
         res.status(404).json({ success: false, error: 'PLAYER_NOT_FOUND' });
         return;

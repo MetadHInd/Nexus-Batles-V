@@ -1,0 +1,648 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Order - GALATEA Catering</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        color: #333;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 700px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+      .header {
+        background: linear-gradient(135deg, #4DB6AC 0%, #26A69A 100%);
+        padding: 30px 20px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+        animation: float 20s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(1deg); }
+      }
+      .logo {
+        max-width: 140px;
+        height: auto;
+        position: relative;
+        z-index: 2;
+        filter: brightness(0) invert(1);
+      }
+      .header-title {
+        color: white;
+        font-size: 24px;
+        font-weight: 700;
+        margin: 15px 0 5px;
+        position: relative;
+        z-index: 2;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      .header-subtitle {
+        color: rgba(255,255,255,0.9);
+        font-size: 14px;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+      }
+      .content {
+        padding: 60px 30px;
+      }
+      .avatar-container {
+        margin-top: -80px;
+        margin-bottom: 30px;
+        position: relative;
+        z-index: 3;
+        text-align: center;
+      }
+      .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 6px solid #ffffff;
+        background: linear-gradient(135deg, #4DB6AC, #26A69A);
+        object-fit: cover;
+        box-shadow: 0 8px 24px rgba(77, 182, 172, 0.3);
+        transition: transform 0.3s ease;
+      }
+      .avatar:hover {
+        transform: scale(1.05);
+      }
+      .main-title {
+        color: #4DB6AC;
+        margin: 0 0 10px;
+        text-align: center;
+        font-size: 32px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #4DB6AC, #26A69A);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .subtitle {
+        text-align: center;
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 30px;
+      }
+      .payment-alert {
+        background: linear-gradient(135deg, #FFFDE7 0%, #FFF9C4 100%);
+        border: 2px solid #FFC107;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 25px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .payment-alert::before {
+        content: '💳';
+        font-size: 24px;
+        position: absolute;
+        top: 15px;
+        left: 20px;
+      }
+      .payment-alert h3 {
+        margin: 0 0 10px 40px;
+        color: #F57F17;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .payment-alert p {
+        margin: 0 0 15px 40px;
+        color: #E65100;
+        font-size: 14px;
+      }
+      .payment-button {
+        display: inline-block;
+        background: linear-gradient(135deg, #4DB6AC, #26A69A);
+        color: white;
+        padding: 15px 40px;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: 700;
+        box-shadow: 0 8px 24px rgba(77, 182, 172, 0.4);
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-left: 40px;
+      }
+      .payment-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(77, 182, 172, 0.5);
+      }
+      .order-summary {
+        background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+        border: 1px solid #DEE2E6;
+        border-radius: 12px;
+        padding: 25px;
+        margin: 25px 0;
+        position: relative;
+      }
+      .order-summary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #4DB6AC, #26A69A);
+        border-radius: 12px 12px 0 0;
+      }
+      .order-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(77, 182, 172, 0.1);
+      }
+      .order-info:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+      .order-info strong {
+        color: #4DB6AC;
+        font-weight: 600;
+      }
+      .order-info .value {
+        color: #333;
+        font-weight: 500;
+      }
+      .section-title {
+        color: #4DB6AC;
+        margin: 35px 0 20px;
+        font-size: 22px;
+        font-weight: 700;
+        border-bottom: 3px solid #4DB6AC;
+        padding-bottom: 8px;
+        position: relative;
+      }
+      .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, #4DB6AC, #26A69A);
+      }
+      .group-section {
+        background: #ffffff;
+        border: 2px solid #E0F2F1;
+        border-radius: 12px;
+        margin: 20px 0;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(77, 182, 172, 0.1);
+        transition: transform 0.2s ease;
+      }
+      .group-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(77, 182, 172, 0.15);
+      }
+      .group-header {
+        background: linear-gradient(135deg, #4DB6AC 0%, #26A69A 100%);
+        padding: 20px 25px;
+        color: white;
+        position: relative;
+      }
+      .group-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      }
+      .group-subtitle {
+        margin: 5px 0 0;
+        font-size: 14px;
+        opacity: 0.9;
+      }
+      .variation-info {
+        background: rgba(255,255,255,0.15);
+        margin: 15px 0 0;
+        padding: 12px 15px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .variation-detail {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .variation-price {
+        font-size: 16px;
+        font-weight: 700;
+        background: rgba(255,255,255,0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+      }
+      .group-items {
+        padding: 0;
+      }
+      .group-item {
+        display: flex;
+        align-items: center;
+        padding: 18px 25px;
+        border-bottom: 1px solid #F0F0F0;
+        transition: background-color 0.2s ease;
+      }
+      .group-item:hover {
+        background-color: #F8F9FA;
+      }
+      .group-item:last-child {
+        border-bottom: none;
+      }
+      .item-info {
+        flex: 1;
+      }
+      .item-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 6px;
+      }
+      .item-description {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 8px;
+        font-style: italic;
+      }
+      .item-selections {
+        margin-top: 8px;
+      }
+      .selection-tag {
+        display: inline-block;
+        background: linear-gradient(135deg, #E0F2F1, #B2DFDB);
+        color: #00695C;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        margin-right: 6px;
+        margin-bottom: 4px;
+        border: 1px solid #4DB6AC;
+      }
+      .item-quantity {
+        width: 80px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 16px;
+        color: #4DB6AC;
+        background: #F0F8F7;
+        padding: 8px;
+        border-radius: 8px;
+        margin: 0 15px;
+      }
+      .item-price {
+        width: 100px;
+        text-align: right;
+        color: #666;
+        font-size: 14px;
+      }
+      .item-total {
+        width: 100px;
+        text-align: right;
+        font-weight: 700;
+        color: #4DB6AC;
+        font-size: 16px;
+      }
+      .group-total {
+        background: linear-gradient(135deg, #F0F8F7 0%, #E0F2F1 100%);
+        padding: 20px 25px;
+        text-align: right;
+        border-top: 2px solid #4DB6AC;
+        color: #4DB6AC;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .totals-section {
+        background: linear-gradient(135deg, #F0F8F7 0%, #E0F2F1 100%);
+        border: 2px solid #4DB6AC;
+        border-radius: 12px;
+        padding: 25px;
+        margin: 25px 0;
+      }
+      .total-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding: 8px 0;
+        font-size: 16px;
+      }
+      .total-row.final {
+        border-top: 3px solid #4DB6AC;
+        margin-top: 20px;
+        padding-top: 20px;
+        font-size: 20px;
+        font-weight: 800;
+        color: #4DB6AC;
+      }
+      .info-section {
+        background: linear-gradient(135deg, #FFFDE7 0%, #FFF9C4 100%);
+        border: 1px solid #FFC107;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .info-section h3 {
+        margin: 0 0 15px;
+        color: #F57F17;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .info-section p {
+        margin: 0;
+        color: #E65100;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .branch-info {
+        background: linear-gradient(135deg, #E0F2F1 0%, #B2DFDB 100%);
+        border: 1px solid #4DB6AC;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .branch-info h3 {
+        margin: 0 0 15px;
+        color: #00695C;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .branch-info p {
+        margin: 0;
+        color: #004D40;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .footer {
+        background: linear-gradient(135deg, #37474F 0%, #263238 100%);
+        padding: 30px 20px;
+        text-align: center;
+        color: white;
+      }
+      .footer p {
+        margin: 5px 0;
+        font-size: 12px;
+        opacity: 0.8;
+      }
+      .footer a {
+        color: #4DB6AC;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .status-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #FFC107, #FFB300);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+      }
+      @media (max-width: 600px) {
+        .container {
+          margin: 20px;
+          max-width: none;
+        }
+        .content {
+          padding: 20px 15px;
+        }
+        .order-info {
+          flex-direction: column;
+          text-align: center;
+        }
+        .total-row {
+          flex-direction: column;
+          text-align: center;
+        }
+        .group-item {
+          flex-direction: column;
+          align-items: flex-start;
+          text-align: left;
+        }
+        .item-quantity, .item-price, .item-total {
+          width: auto;
+          text-align: left;
+          margin: 5px 0;
+        }
+        .payment-button {
+          margin-left: 0;
+          display: block;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img
+          src="https://i0.wp.com/pincho.com/wp-content/uploads/2023/01/pincho-logo-site.png?fit=350%2C134&ssl=1"
+          alt="GALATEA Catering Logo"
+          class="logo"
+        />
+        <h1 class="header-title">Quote</h1>
+      </div> 
+      
+      <div class="content">
+        <div class="avatar-container">
+          <img
+            src="https://askgalatealabs.ai/assets/GALATEA_Profile_Pic.png"
+            alt="GALATEA Avatar"
+            class="avatar"
+          />
+        </div>
+        
+        <h1 class="main-title">💳 Payment Required</h1>
+        <p class="subtitle">
+          Hello <strong>John Doe</strong>, your order is ready for payment!
+        </p>
+
+        <div class="payment-alert">
+          <h3>Complete Your Payment</h3>
+          <p>Click the button below to securely pay for your order and confirm your reservation.</p>
+          <a href="#" class="payment-button">Pay Now - $67.85</a>
+        </div>
+
+        <div class="order-summary">
+          <div class="order-info">
+            <span><strong>Order Number:</strong></span>
+            <span class="value">#12345</span>
+          </div>
+          <div class="order-info">
+            <span><strong>Order Date:</strong></span>
+            <span class="value">June 20, 2025 at 11:30 AM</span>
+          </div>
+          <div class="order-info">
+            <span><strong>Status:</strong></span>
+            <span class="status-badge">Pending Payment</span>
+          </div>
+          <div class="order-info">
+            <span><strong>Guests:</strong></span>
+            <span class="value">20 people</span>
+          </div>
+          <div class="order-info">
+            <span><strong>Delivery Time:</strong></span>
+            <span class="value">11:30 AM</span>
+          </div>
+        </div>
+
+        <h2 class="section-title">📋 Order Details</h2>
+        
+        <div class="group-section">
+          <div class="group-header">
+            <h3 class="group-title">🍽️ A LA CARTE</h3>
+            <p class="group-subtitle">Individual items selection</p>
+            <div class="variation-info">
+              <span class="variation-detail">Serves: 10 people</span>
+              <span class="variation-price">$35.00</span>
+            </div>
+          </div>
+          
+          <div class="group-items">
+            <div class="group-item">
+              <div class="item-info">
+                <div class="item-name">Chicken Kebab</div>
+                <div class="item-description">Grilled chicken skewers with Mediterranean spices</div>
+                <div class="item-selections">
+                  <span class="selection-tag">No onions</span>
+                  <span class="selection-tag">Extra sauce</span>
+                  <span class="selection-tag">Medium spice</span>
+                </div>
+              </div>
+              <div class="item-quantity">×10</div>
+              <div class="item-price">$15.99</div>
+              <div class="item-total">$159.90</div>
+            </div>
+            
+            <div class="group-item">
+              <div class="item-info">
+                <div class="item-name">Greek Salad</div>
+                <div class="item-description">Fresh vegetables with feta cheese and olive oil</div>
+                <div class="item-selections">
+                  <span class="selection-tag">Extra feta</span>
+                  <span class="selection-tag">Dressing on side</span>
+                </div>
+              </div>
+              <div class="item-quantity">×5</div>
+              <div class="item-price">$8.50</div>
+              <div class="item-total">$42.50</div>
+            </div>
+            
+            <div class="group-item">
+              <div class="item-info">
+                <div class="item-name">Pita Bread</div>
+                <div class="item-description">Warm, freshly baked pita bread</div>
+              </div>
+              <div class="item-quantity">×20</div>
+              <div class="item-price">$1.25</div>
+              <div class="item-total">$25.00</div>
+            </div>
+          </div>
+          
+          <div class="group-total">
+            Group Total: $227.40
+          </div>
+        </div>
+
+        <div class="totals-section">
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <span>$227.40</span>
+          </div>
+          <div class="total-row">
+            <span>Delivery Fee:</span>
+            <span>$0.00</span>
+          </div>
+          <div class="total-row">
+            <span>Taxes (7%):</span>
+            <span>$15.92</span>
+          </div>
+          <div class="total-row">
+            <span>Tip:</span>
+            <span>$0.00</span>
+          </div>
+          <div class="total-row final">
+            <span>Total Amount:</span>
+            <span>$243.32</span>
+          </div>
+        </div>
+
+            <div class="payment-alert">
+          <h3>Complete Your Payment</h3>
+          <p>Click the button below to securely pay for your order and confirm your reservation.</p>
+          <a href="#" class="payment-button">Pay Now - $67.85</a>
+        </div>
+        <h2 class="section-title">🚚 Delivery Information</h2>
+        <div class="info-section">
+          <h3>Delivery Address</h3>
+          <p>
+            123 Business Avenue, Suite 456<br>
+            Miami, Florida<br>
+            United States
+          </p>
+        </div>
+
+        <h2 class="section-title">🏪 Restaurant Information</h2>
+        <div class="branch-info">
+          <h3>Mediterranean Delights</h3>
+          <p>
+            📍 456 Restaurant Street, Miami, FL<br>
+            📞 (305) 555-0123
+          </p>
+        </div>
+
+        <div class="info-section">
+          <h3>Important Notes</h3>
+          <p>
+            • Payment must be completed within 24 hours to secure your order<br>
+            • Orders will be delivered at the specified time and address<br>
+            • For questions, contact us at <a href="mailto:catering@pincho.com" style="color: #4DB6AC; text-decoration: none; font-weight: 600;">catering@pincho.com</a>
+          </p>
+        </div>
+
+        <div style="text-align: center; margin: 40px 0;">
+          <p style="font-size: 18px; color: #4DB6AC; font-weight: 600;">
+            <strong>Thank you for choosing Pincho Catering!</strong><br>
+            We look forward to serving you. 🍽️
+          </p>
+        </div>
+      </div>
+      
+      <div class="footer">
+        <p>© 2025 GALATEA Catering. All rights reserved.</p>
+        <p>
+          <a href="https://askgalatealabs.ai">Powered by GALATEA Techonology</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
+

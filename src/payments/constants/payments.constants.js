@@ -1,0 +1,47 @@
+"use strict";
+/**
+ * payments.constants.ts
+ * Constantes centrales del módulo de pagos de Nexus Battles.
+ * Migrado y adaptado desde Imperial Guard → Nexus Battles (TypeScript).
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PAYMENT_LIMITS = exports.AUDIT_ACTIONS = exports.GATEWAY_NAMES = exports.TRANSACTION_STATUS = exports.ORDER_STATUS = void 0;
+exports.ORDER_STATUS = Object.freeze({
+    PENDING: 'PENDING',
+    PROCESSING: 'PROCESSING',
+    PAID: 'PAID',
+    FAILED: 'FAILED',
+    REFUNDED: 'REFUNDED',
+    CANCELLED: 'CANCELLED',
+});
+exports.TRANSACTION_STATUS = Object.freeze({
+    INITIATED: 'INITIATED',
+    PENDING: 'PENDING',
+    APPROVED: 'APPROVED',
+    REJECTED: 'REJECTED',
+    REFUNDED: 'REFUNDED',
+    ERROR: 'ERROR',
+});
+exports.GATEWAY_NAMES = Object.freeze({
+    MERCADOPAGO: 'mercadopago',
+    STRIPE: 'stripe',
+    MOCK: 'mock',
+});
+exports.AUDIT_ACTIONS = Object.freeze({
+    ORDER_CREATED: 'ORDER_CREATED',
+    ORDER_STATUS_CHANGED: 'ORDER_STATUS_CHANGED',
+    TRANSACTION_CREATED: 'TRANSACTION_CREATED',
+    TX_STATUS_CHANGED: 'TX_STATUS_CHANGED',
+    WEBHOOK_RECEIVED: 'WEBHOOK_RECEIVED',
+    REFUND_REQUESTED: 'REFUND_REQUESTED',
+    REFUND_COMPLETED: 'REFUND_COMPLETED',
+    INVENTORY_ASSIGNED: 'INVENTORY_ASSIGNED',
+    FRAUD_FLAG: 'FRAUD_FLAG',
+});
+exports.PAYMENT_LIMITS = Object.freeze({
+    MAX_AMOUNT_CENTS: 10000000, // $100,000.00
+    MIN_AMOUNT_CENTS: 100, // $1.00
+    MAX_DAILY_ORDERS: 10,
+    RATE_LIMIT_WINDOW_MS: 15 * 60 * 1000,
+    RATE_LIMIT_MAX_REQ: 20,
+});

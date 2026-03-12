@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GALATEA Catering Quote</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .company-info h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .company-info p {
+            color: #666;
+            font-size: 14px;
+            margin: 2px 0;
+        }
+        
+        .logo-section {
+            text-align: right;
+        }
+        
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4a4a4a;
+            margin-bottom: 10px;
+        }
+        
+        .quote-title {
+            color: #20b2aa;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        
+        .bill-to-section {
+            padding: 30px;
+            background-color: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .bill-to-left {
+            flex: 1;
+        }
+        
+        .bill-to h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: normal;
+        }
+        
+        .client-info h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .client-info p {
+            color: #666;
+            font-size: 14px;
+            margin: 2px 0;
+        }
+        
+        .requirements-section-address {
+            padding: 15px;
+            background-color: white;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .requirement-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .requirement-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .requirement-label {
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .requirement-value {
+            color: #20b2aa;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .quote-details {
+            padding: 20px 30px;
+            background-color: white;
+            display: flex;
+            gap: 40px;
+        }
+        
+        .quote-item {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .quote-item strong {
+            color: #333;
+        }
+        
+        .delivery-info {
+            margin: 20px 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .delivery-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .delivery-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .delivery-value {
+            color: #20b2aa;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .items-table {
+            margin: 20px 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        thead {
+            background-color: #8fa8b2;
+            color: white;
+        }
+        
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        td {
+            padding: 12px;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .qty {
+            text-align: center;
+            width: 60px;
+        }
+        
+        .price, .amount {
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        .totals-section {
+            margin: 20px 30px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .totals-table {
+            width: 300px;
+        }
+        
+        .totals-table table {
+            box-shadow: none;
+        }
+        
+        .totals-table td {
+            padding: 8px 12px;
+            border: none;
+            font-size: 14px;
+        }
+        
+        .totals-table .label {
+            text-align: right;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .totals-table .value {
+            text-align: right;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .total-row {
+            border-top: 2px solid #333;
+            font-size: 16px;
+        }
+        
+        .total-row .label {
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .terms-section {
+            margin: 20px 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .terms-section h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .terms-section ul {
+            list-style: none;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .terms-section li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        .terms-section li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #20b2aa;
+        }
+        
+        .notes {
+            margin: 20px 30px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .pay-button {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .pay-btn {
+            background-color: #20b2aa;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(32, 178, 170, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .pay-btn:hover {
+            background-color: #1a9a93;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(32, 178, 170, 0.4);
+        }
+        
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            
+            .pay-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="company-info">
+                <h1>AIA Catering</h1>
+                <p>1523 Business Ave, Suite 801</p>
+                <p>Miami, FL 33102</p>
+                <p>Tel: +1 (305) 555-0123</p>
+            </div>
+            <div class="logo-section">
+                <div class="logo">AiA</div>
+                <div class="quote-title">CATERING<br>QUOTE</div>
+            </div>
+        </div>
+
+        <!-- Bill To Section -->
+        <div class="bill-to-section">
+            <div class="bill-to-left">
+                <h3>Bill To</h3>
+                <div class="client-info">
+                    <h2>Corporate Events LLC</h2>
+                    <p>456 Corporate Blvd, Floor 12, Miami, FL 33101</p>
+                    <p>Tel: +1 (305) 555-0456</p>
+                </div>
+            </div>
+            
+            <!-- Requirements Section -->
+            <div class="requirements-section-address">
+                <div class="requirement-item">
+                    <span class="requirement-label">Setup required:</span>
+                    <span class="requirement-value">Yes</span>
+                </div>
+                <div class="requirement-item">
+                    <span class="requirement-label">Utensils required:</span>
+                    <span class="requirement-value">Yes</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quote Details -->
+        <div class="quote-details">
+            <div class="quote-item">
+                Quote <strong>#CTG000226</strong>
+            </div>
+            <div class="quote-item">
+                Quote date <strong>03/06/2025</strong>
+            </div>
+        </div>
+
+        <!-- Delivery Information -->
+        <div class="delivery-info">
+            <div class="delivery-row">
+                <span class="delivery-label">Delivery Date</span>
+                <span class="delivery-value">2025-06-15</span>
+            </div>
+            <div class="delivery-row">
+                <span class="delivery-label">Delivery Time</span>
+                <span class="delivery-value">12:30 PM</span>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="items-table">
+            <div style="margin-bottom: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #20b2aa;">
+                <h4 style="color: #333; margin-bottom: 8px; font-size: 16px;">Order Details</h4>
+                <p style="color: #666; font-size: 14px; line-height: 1.5; margin: 0;">
+                    Below is a detailed breakdown of your catering order including all items, quantities, and pricing.
+                    This comprehensive list ensures transparency and helps you verify all requested items for your event.
+                </p>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th class="qty">QTY</th>
+                        <th>Description</th>
+                        <th class="price">Unit Price</th>
+                        <th class="amount">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="qty">25</td>
+                        <td>
+                            <strong>Gourmet Appetizer</strong><br>
+                            <small style="color: #888; font-size: 12px;">Premium selection of artisanal appetizers perfect for corporate events</small>
+                        </td>
+                        <td class="price">$18.50</td>
+                        <td class="amount">$462.50</td>
+                    </tr>
+                    <tr>
+                        <td class="qty">25</td>
+                        <td>
+                            <strong>Main Course - Salmon</strong><br>
+                            <small style="color: #888; font-size: 12px;">Fresh Atlantic salmon with seasonal vegetables and herb butter</small>
+                        </td>
+                        <td class="price">$35.00</td>
+                        <td class="amount">$875.00</td>
+                    </tr>
+                    <tr>
+                        <td class="qty">25</td>
+                        <td>
+                            <strong>Alternative Dish - Chicken</strong><br>
+                            <small style="color: #888; font-size: 12px;">Grilled chicken breast with roasted vegetables and garlic sauce</small>
+                        </td>
+                        <td class="price">$28.00</td>
+                        <td class="amount">$700.00</td>
+                    </tr>
+                    <tr>
+                        <td class="qty">25</td>
+                        <td>
+                            <strong>Individual Dessert</strong><br>
+                            <small style="color: #888; font-size: 12px;">Assorted gourmet desserts including chocolate mousse and fruit tarts</small>
+                        </td>
+                        <td class="price">$12.00</td>
+                        <td class="amount">$300.00</td>
+                    </tr>
+                    <tr>
+                        <td class="qty">25</td>
+                        <td>
+                            <strong>Assorted Beverages</strong><br>
+                            <small style="color: #888; font-size: 12px;">Selection of soft drinks, juices, coffee, and tea service</small>
+                        </td>
+                        <td class="price">$8.50</td>
+                        <td class="amount">$212.50</td>
+                    </tr>
+                    <tr>
+                        <td class="qty">1</td>
+                        <td>
+                            <strong>Service & Staff</strong><br>
+                            <small style="color: #888; font-size: 12px;">Professional catering staff for setup, service, and cleanup</small>
+                        </td>
+                        <td class="price">$450.00</td>
+                        <td class="amount">$450.00</td>
+                    </tr>
+                    <tr>
+                        <td class="qty">1</td>
+                        <td>
+                            <strong>Decoration & Setup</strong><br>
+                            <small style="color: #888; font-size: 12px;">Table linens, centerpieces, and professional event setup</small>
+                        </td>
+                        <td class="price">$180.00</td>
+                        <td class="amount">$180.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="totals-section">
+            <div class="totals-table">
+                <table>
+                    <tr>
+                        <td class="label">Subtotal</td>
+                        <td class="value">$3,180.00</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Delivery Fee</td>
+                        <td class="value">$15.00</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Tip</td>
+                        <td class="value">$5.00</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Tax (7%)</td>
+                        <td class="value">$224.00</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td class="label">Total (USD)</td>
+                        <td class="value">$3,424.00</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Invoice Terms -->
+        <div class="terms-section">
+            <h4>Invoice Terms</h4>
+            <ul>
+                <li>All orders must be paid in advance.</li>
+                <li>Orders will be delivered or ready for pickup at the time stated on this invoice.</li>
+                <li>Credit card charges will appear as Processed by GALATEA Technology Inc. on your bank statement.</li>
+                <li>GALATEA Technology uses Stripe and Square to process payments. At no point do GALATEA Technology or the restaurant store any credit card information.</li>
+            </ul>
+        </div>
+
+        <!-- Additional Notes -->
+        <div class="notes">
+            <strong>Additional notes:</strong> Corporate event for 25 people. Includes full table service, white linens and basic floral decoration.
+        </div>
+
+        <!-- Pay Button -->
+        <div class="pay-button">
+            <button class="pay-btn" onclick="processPayment()">Pay Now</button>
+        </div>
+    </div>
+
+    <script>
+        function processPayment() {
+            alert('Payment processing would be implemented here with your preferred payment gateway (Stripe, Square, etc.)');
+        }
+        
+        // Function to update invoice data
+        function updateInvoice(data) {
+            // This function can be used to dynamically update the invoice with new data
+            console.log('Invoice data updated:', data);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+# Stage 1: Builder
+# This stage installs all dependencies and builds the app.
+FROM node:22.14-alpine AS builder
+WORKDIR /app
+
+# Copy authentication and package files
+COPY .npmrc ./
+COPY package*.json ./
+
+# Install all dependencies (including dev) for the build process
+RUN npm ci
+
+# Copy the rest of the source code
+COPY . .
+
+# Generate Prisma Client for the container's environment
+RUN npx prisma generate
+
+# Build the application
+RUN npm run build
+
+# Remove development dependencies to shrink node_modules
+RUN npm prune --production
+
+# Stage 2: Production
+# This stage creates the final, lean image with only production artifacts.
+FROM node:22.14-alpine AS production
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Install Redis and supervisor for process management
+RUN apk add --no-cache redis supervisor
+
+# Create directories for supervisor
+RUN mkdir -p /etc/supervisor/conf.d /var/log/supervisor
+
+# Copy supervisor configuration
+COPY supervisord.core.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy Redis configuration
+COPY redis.core.conf /etc/redis/redis.core.conf
+
+# Copy pruned node_modules, compiled code, and necessary files from the builder stage
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/credentials ./credentials
+COPY --from=builder /app/package.json ./
+
+# Create Redis data directory
+RUN mkdir -p /var/lib/redis && chown -R redis:redis /var/lib/redis
+
+# Set environment variables
+ENV NODE_ENV=production
+
+EXPOSE 3000
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

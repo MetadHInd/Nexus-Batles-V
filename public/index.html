@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      // Redirect to login.html if Authorization cookie is missing and not already on login.html
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      }
+      if (
+        !getCookie('Authorization') &&
+        !window.location.pathname.endsWith('login.html')
+      ) {
+        window.location.href = 'login.html';
+      }
+    </script>
+  </head>
+  <script
+    src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+    defer
+  ></script>
+
+  <body>
+    <div class="login-container">
+      <!-- Logo section -->
+      <div class="logo-container">
+        <img class="login-login" src="logo.png" alt="Logo" class="logo" />
+      </div>
+
+      <form id="loginForm" method="post" autocomplete="on">
+        <div class="input-group">
+          <label for="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            autocomplete="username"
+            required
+          />
+        </div>
+        <div class="input-group">
+          <label for="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <button type="submit">Login</button>
+      </form>
+      <label id="apiName" class="api-name"></label>
+    </div>
+
+    <script>
+      let apiContext = null;
+      let origin = null;
+
+      fetch('api-config.json')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((config) => {
+          origin = config.origin;
+          console.log('Login origin ', origin);
+          const apiNameElement = document.getElementById('apiName');
+          if (config.apiName) {
+            apiContext = `${config.appName} ${config.apiName} ${config.version}`;
+            apiNameElement.textContent = apiContext;
+
+            // Enable the form submission once apiContext is ready
+            document
+              .getElementById('loginForm')
+              .querySelector('button[type="submit"]').disabled = false;
+          }
+        })
+        .catch((error) => {});
+
+      document
+        .getElementById('loginForm')
+        .querySelector('button[type="submit"]').disabled = true;
+
+      document
+        .getElementById('loginForm')
+        .addEventListener('submit', function (event) {
+          event.preventDefault();
+
+          if (!apiContext) {
+            return;
+          }
+
+          console.log('Login origin ', origin);
+          const form = event.target;
+          const formData = new FormData(form);
+
+          const username = formData.get('username');
+          const password = formData.get('password');
+
+          fetch('/api/sysUser/login-swagger', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-uuid': origin,
+            },
+            body: JSON.stringify({
+              email: username,
+              password: password,
+              origin: apiContext,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.data && data.data.token) {
+                const { token, tenants, defaultTenant } = data.data;
+                
+                sessionStorage.setItem('token', token);
+                document.cookie = `authToken=${token};path=/;`;
+
+                if ('credentials' in navigator) {
+                  const credential = new PasswordCredential({
+                    id: username,
+                    password: password,
+                  });
+                  navigator.credentials.store(credential);
+                }
+
+                // Guardar información de tenants
+                sessionStorage.setItem('tenants', JSON.stringify(tenants || []));
+                if (defaultTenant) {
+                  sessionStorage.setItem('defaultTenant', defaultTenant);
+                }
+
+                // Redirigir según cantidad de tenants
+                if (!tenants || tenants.length === 0) {
+                  alert('No tienes acceso a ningún tenant.');
+                  return;
+                }
+
+                if (tenants.length === 1) {
+                  // Un solo tenant - seleccionar automáticamente y guardar
+                  const tenant = tenants[0];
+                  sessionStorage.setItem('selectedTenant', tenant.tenant_sub);
+                  
+                  const expiry = new Date();
+                  expiry.setHours(expiry.getHours() + 24);
+                  document.cookie = `tenant_sub=${tenant.tenant_sub};path=/;expires=${expiry.toUTCString()}`;
+                  
+                  window.location.href = '/api-docs';
+                } else {
+                  // Múltiples tenants - ir a página de selección
+                  window.location.href = '/tenant-selection.html?token=' + encodeURIComponent(token);
+                }
+              }
+            })
+            .catch((error) => {});
+        });
+    </script>
+  </body>
+</html>
