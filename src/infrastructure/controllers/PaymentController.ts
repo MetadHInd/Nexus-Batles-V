@@ -40,7 +40,7 @@ export class PaymentController {
       const gateway     = createGateway(gatewayName);
       const useCase     = new ProcessPaymentUseCase(paymentRepository, gateway);
       const result      = await useCase.execute({
-        orderId:   req.params.orderId,
+        orderId:   req.params.orderId as string,
         userId:    (req as any).user.id,
         buyerInfo: req.body.buyerInfo,
       });
@@ -51,7 +51,7 @@ export class PaymentController {
   // ── GET /api/v1/payments/orders/:orderId ──────────────────────────────────────
   async getOrderStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const order = await paymentRepository.getOrderById(req.params.orderId);
+      const order = await paymentRepository.getOrderById(req.params.orderId as string);
       if (!order) {
         res.status(404).json({ success: false, error: 'ORDER_NOT_FOUND' });
         return;
@@ -70,7 +70,7 @@ export class PaymentController {
       const gateway = createGateway(req.body.gateway ?? process.env.DEFAULT_PAYMENT_GATEWAY);
       const useCase = new RefundPaymentUseCase(paymentRepository, gateway);
       const result  = await useCase.execute({
-        orderId:     req.params.orderId,
+        orderId:     req.params.orderId as string,
         userId:      (req as any).user.id,
         amount:      req.body.amount,
         reason:      req.body.reason,

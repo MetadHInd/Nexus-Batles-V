@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Payment Order Email</title>
+</head>
+<body>
+    <h1>Testing Payment Order Email Template</h1>
+    <p>This is a test to verify the new payment order email template is working correctly.</p>
+    
+    <h2>Features Implemented:</h2>
+    <ul>
+        <li>✅ New payment order email template with GALATEA color scheme (#4DB6AC green and yellow)</li>
+        <li>✅ Modern design with gradients and animations</li>
+        <li>✅ Payment button for customers (when currentPaymentUrl is provided)</li>
+        <li>✅ No payment button for branch users</li>
+        <li>✅ Organized by groups with detailed item information</li>
+        <li>✅ Responsive design for mobile devices</li>
+        <li>✅ Integration with order service for GALATEA channel orders</li>
+    </ul>
+
+    <h2>Email Flow:</h2>
+    <ol>
+        <li>When an order is created with purchasing_channel === "GALATEA"</li>
+        <li>Customer receives payment order email with payment button</li>
+        <li>Branch users receive notification email without payment button</li>
+        <li>Email includes all order details organized by groups</li>
+        <li>Uses currentPaymentUrl from payment_order table</li>
+    </ol>
+
+    <h2>Template Variables:</h2>
+    <ul>
+        <li>customerName, customerEmail, orderNumber</li>
+        <li>orderDate, orderTime, guestNumber</li>
+        <li>groups (with items, variations, selections)</li>
+        <li>subtotal, deliveryPrice, taxValue, tipAmount, total</li>
+        <li>deliveryAddress, cityName, stateName, countryName</li>
+        <li>branchName, branchAddress, branchPhone</li>
+        <li>orderStatus, estimatedDeliveryTime</li>
+        <li>appName, supportEmail, currentYear</li>
+        <li>currentPaymentUrl, includePaymentButton</li>
+    </ul>
+
+    <p><strong>Status:</strong> ✅ Implementation Complete</p>
+    <p><strong>Ready for testing:</strong> Create an order with purchasing_channel = "GALATEA" to test the email functionality.</p>
+</body>
+</html>

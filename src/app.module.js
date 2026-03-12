@@ -1,0 +1,235 @@
+"use strict";
+var __runInitializers = (this && this.__runInitializers) || function (thisArg, initializers, value) {
+    var useValue = arguments.length > 2;
+    for (var i = 0; i < initializers.length; i++) {
+        value = useValue ? initializers[i].call(thisArg, value) : initializers[i].call(thisArg);
+    }
+    return useValue ? value : void 0;
+};
+var __esDecorate = (this && this.__esDecorate) || function (ctor, descriptorIn, decorators, contextIn, initializers, extraInitializers) {
+    function accept(f) { if (f !== void 0 && typeof f !== "function") throw new TypeError("Function expected"); return f; }
+    var kind = contextIn.kind, key = kind === "getter" ? "get" : kind === "setter" ? "set" : "value";
+    var target = !descriptorIn && ctor ? contextIn["static"] ? ctor : ctor.prototype : null;
+    var descriptor = descriptorIn || (target ? Object.getOwnPropertyDescriptor(target, contextIn.name) : {});
+    var _, done = false;
+    for (var i = decorators.length - 1; i >= 0; i--) {
+        var context = {};
+        for (var p in contextIn) context[p] = p === "access" ? {} : contextIn[p];
+        for (var p in contextIn.access) context.access[p] = contextIn.access[p];
+        context.addInitializer = function (f) { if (done) throw new TypeError("Cannot add initializers after decoration has completed"); extraInitializers.push(accept(f || null)); };
+        var result = (0, decorators[i])(kind === "accessor" ? { get: descriptor.get, set: descriptor.set } : descriptor[key], context);
+        if (kind === "accessor") {
+            if (result === void 0) continue;
+            if (result === null || typeof result !== "object") throw new TypeError("Object expected");
+            if (_ = accept(result.get)) descriptor.get = _;
+            if (_ = accept(result.set)) descriptor.set = _;
+            if (_ = accept(result.init)) initializers.unshift(_);
+        }
+        else if (_ = accept(result)) {
+            if (kind === "field") initializers.unshift(_);
+            else descriptor[key] = _;
+        }
+    }
+    if (target) Object.defineProperty(target, contextIn.name, descriptor);
+    done = true;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __setFunctionName = (this && this.__setFunctionName) || function (f, name, prefix) {
+    if (typeof name === "symbol") name = name.description ? "[".concat(name.description, "]") : "";
+    return Object.defineProperty(f, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AppModule = void 0;
+var common_1 = require("@nestjs/common");
+var app_controller_1 = require("./app.controller");
+var app_service_1 = require("./app.service");
+var database_module_1 = require("./shared/database/database.module");
+var cache_module_1 = require("./shared/cache/cache.module");
+var auth_module_1 = require("./shared/core/auth/auth.module");
+var messaging_module_1 = require("./shared/core/messaging/messaging.module");
+var actions_1 = require("./modules/actions/");
+var permissions_1 = require("./modules/permissions/");
+var role_permissions_1 = require("./modules/role_permissions/");
+var role_1 = require("./modules/role/");
+var module_1 = require("./modules/module/");
+var scheduler_manager_module_1 = require("./shared/core/services/scheduler/scheduler-manager.module");
+// ✅ CONTROLADOR DE DEBUG TEMPORAL
+var common_2 = require("@nestjs/common");
+var DebugController = function () {
+    var _classDecorators = [(0, common_2.Controller)('debug')];
+    var _classDescriptor;
+    var _classExtraInitializers = [];
+    var _classThis;
+    var _instanceExtraInitializers = [];
+    var _healthCheck_decorators;
+    var _performanceTest_decorators;
+    var _getConnectionInfo_decorators;
+    var _simpleQuery_decorators;
+    var DebugController = _classThis = /** @class */ (function () {
+        function DebugController_1(prisma) {
+            this.prisma = (__runInitializers(this, _instanceExtraInitializers), prisma);
+        }
+        DebugController_1.prototype.healthCheck = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, service_cache_1.ServiceCache.Database.Prisma.healthCheck()];
+                        case 1: return [2 /*return*/, _a.sent()];
+                    }
+                });
+            });
+        };
+        DebugController_1.prototype.performanceTest = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, service_cache_1.ServiceCache.Database.Prisma.performanceTest()];
+                        case 1: return [2 /*return*/, _a.sent()];
+                    }
+                });
+            });
+        };
+        DebugController_1.prototype.getConnectionInfo = function () {
+            var _a;
+            return {
+                accelerateEnabled: ((_a = process.env.DATABASE_URL) === null || _a === void 0 ? void 0 : _a.includes('accelerate.prisma-data.net')) || false,
+                databaseUrl: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+                databaseUrlDev: process.env.DATABASE_URL_DEV ? 'SET' : 'NOT SET',
+                usedUrl: process.env.DATABASE_URL || process.env.DATABASE_URL_DEV || 'NONE',
+                timestamp: new Date().toISOString()
+            };
+        };
+        DebugController_1.prototype.simpleQuery = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                var start, result, duration, error_1;
+                var _a;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            start = Date.now();
+                            _b.label = 1;
+                        case 1:
+                            _b.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, service_cache_1.ServiceCache.Database.Prisma.sysUser.count()];
+                        case 2:
+                            result = _b.sent();
+                            duration = Date.now() - start;
+                            return [2 /*return*/, {
+                                    success: true,
+                                    result: result,
+                                    duration: "".concat(duration, "ms"),
+                                    accelerate: ((_a = process.env.DATABASE_URL) === null || _a === void 0 ? void 0 : _a.includes('accelerate')) || false
+                                }];
+                        case 3:
+                            error_1 = _b.sent();
+                            return [2 /*return*/, {
+                                    success: false,
+                                    error: error_1.message,
+                                    duration: "".concat(Date.now() - start, "ms")
+                                }];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            });
+        };
+        return DebugController_1;
+    }());
+    __setFunctionName(_classThis, "DebugController");
+    (function () {
+        var _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        _healthCheck_decorators = [(0, common_2.Get)('health')];
+        _performanceTest_decorators = [(0, common_2.Get)('performance')];
+        _getConnectionInfo_decorators = [(0, common_2.Get)('connection-info')];
+        _simpleQuery_decorators = [(0, common_2.Get)('simple-query')];
+        __esDecorate(_classThis, null, _healthCheck_decorators, { kind: "method", name: "healthCheck", static: false, private: false, access: { has: function (obj) { return "healthCheck" in obj; }, get: function (obj) { return obj.healthCheck; } }, metadata: _metadata }, null, _instanceExtraInitializers);
+        __esDecorate(_classThis, null, _performanceTest_decorators, { kind: "method", name: "performanceTest", static: false, private: false, access: { has: function (obj) { return "performanceTest" in obj; }, get: function (obj) { return obj.performanceTest; } }, metadata: _metadata }, null, _instanceExtraInitializers);
+        __esDecorate(_classThis, null, _getConnectionInfo_decorators, { kind: "method", name: "getConnectionInfo", static: false, private: false, access: { has: function (obj) { return "getConnectionInfo" in obj; }, get: function (obj) { return obj.getConnectionInfo; } }, metadata: _metadata }, null, _instanceExtraInitializers);
+        __esDecorate(_classThis, null, _simpleQuery_decorators, { kind: "method", name: "simpleQuery", static: false, private: false, access: { has: function (obj) { return "simpleQuery" in obj; }, get: function (obj) { return obj.simpleQuery; } }, metadata: _metadata }, null, _instanceExtraInitializers);
+        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+        DebugController = _classThis = _classDescriptor.value;
+        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+        __runInitializers(_classThis, _classExtraInitializers);
+    })();
+    return DebugController = _classThis;
+}();
+var gmail_module_1 = require("./shared/integrations/gmail/gmail.module");
+var service_cache_1 = require("./shared/core/services/service-cache/service-cache");
+var google_cloud_storage_module_1 = require("./shared/services/google-cloud-storage/google-cloud-storage.module");
+// 🎯 MÓDULOS DE PERMISOS Y AUTORIZACIÓN
+// 📡 MÓDULO SSE (Server-Sent Events)
+var sse_module_1 = require("./shared/core/sse/sse.module");
+var AppModule = function () {
+    var _classDecorators = [(0, common_1.Module)({
+            imports: [
+                google_cloud_storage_module_1.GoogleCloudStorageModule,
+                scheduler_manager_module_1.SchedulerManagerModule,
+                database_module_1.DatabaseModule,
+                cache_module_1.CacheModule,
+                auth_module_1.AuthModule,
+                messaging_module_1.MessagingModule,
+                gmail_module_1.GmailModule,
+                sse_module_1.SSEModule, // 📡 Server-Sent Events
+                // Módulos de permisos
+                role_1.RoleModule,
+                permissions_1.PermissionsModule,
+                role_permissions_1.RolePermissionsModule,
+                actions_1.ActionsModule,
+                module_1.ModulesModule,
+            ],
+            controllers: [app_controller_1.AppController, DebugController],
+            providers: [app_service_1.AppService],
+        })];
+    var _classDescriptor;
+    var _classExtraInitializers = [];
+    var _classThis;
+    var AppModule = _classThis = /** @class */ (function () {
+        function AppModule_1() {
+        }
+        return AppModule_1;
+    }());
+    __setFunctionName(_classThis, "AppModule");
+    (function () {
+        var _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+        AppModule = _classThis = _classDescriptor.value;
+        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+        __runInitializers(_classThis, _classExtraInitializers);
+    })();
+    return AppModule = _classThis;
+}();
+exports.AppModule = AppModule;

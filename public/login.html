@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <script
+    src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+    defer
+  ></script>
+
+  <body>
+    <div class="login-container">
+      <!-- Logo section -->
+      <div class="logo-container">
+        <img class="login-login" src="logo.png" alt="Logo" class="logo" />
+      </div>
+
+      <form id="loginForm" method="post" autocomplete="on">
+        <div class="input-group">
+          <label for="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            autocomplete="username"
+            required
+          />
+        </div>
+        <div class="input-group">
+          <label for="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <button type="submit">Login</button>
+      </form>
+      <label id="apiName" class="api-name"></label>
+    </div>
+
+    <script>
+      let apiContext = null;
+      let origin = null;
+
+      fetch('api-config.json')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((config) => {
+          origin = config.origin;
+          console.log('Login origin ', origin);
+          const apiNameElement = document.getElementById('apiName');
+          if (config.apiName) {
+            apiContext = `${config.appName} ${config.apiName} ${config.version}`;
+            apiNameElement.textContent = apiContext;
+
+            // Enable the form submission once apiContext is ready
+            document
+              .getElementById('loginForm')
+              .querySelector('button[type="submit"]').disabled = false;
+          }
+        })
+        .catch((error) => {});
+
+      document
+        .getElementById('loginForm')
+        .querySelector('button[type="submit"]').disabled = true;
+
+      document
+        .getElementById('loginForm')
+        .addEventListener('submit', function (event) {
+          event.preventDefault();
+
+          if (!apiContext) {
+            return;
+          }
+
+          console.log('Login origin ', origin);
+          const form = event.target;
+          const formData = new FormData(form);
+
+          const username = formData.get('username');
+          const password = formData.get('password');
+
+          console.log('=== DEBUG LOGIN ===');
+          console.log('Sending login data:', {
+            email: username,
+            password: password ? '[PASSWORD PROVIDED]' : '[NO PASSWORD]'
+          });
+          console.log('Headers:', {
+            'Content-Type': 'application/json',
+            'x-auth-uuid': origin || '108a9b95-49dc-404a-8357-68d45e0ecd6b'
+          });
+          console.log('Request URL:', '/api/sysUser/login-swagger');
+          console.log('=====================');
+
+          fetch('/api/sysUser/login-swagger', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-uuid': origin || '108a9b95-49dc-404a-8357-68d45e0ecd6b',
+            },
+            body: JSON.stringify({
+              email: username,
+              password: password,
+            }),
+          })
+            .then((response) => {
+              console.log('=== RESPONSE DEBUG ===');
+              console.log('Response status:', response.status);
+              console.log('Response ok:', response.ok);
+              console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+              console.log('====================');
+              return response.json();
+            })
+            .then((data) => {
+              console.log('=== PARSED RESPONSE ===');
+              console.log('Full response data:', JSON.stringify(data, null, 2));
+              console.log('Data type:', typeof data);
+              console.log('Data keys:', Object.keys(data));
+              console.log('=====================');
+              
+              // Manejo robusto de la estructura de respuesta
+              let token;
+              
+              // Extraer token
+              if (data.data && data.data.data && data.data.data.token) {
+                token = data.data.data.token;
+              } else if (data.data && data.data.token) {
+                token = data.data.token;
+              } else if (data.token) {
+                token = data.token;
+              }
+              
+              if (token) {
+                // Almacenar token
+                sessionStorage.setItem('token', token);
+
+                // Establecer cookie con el token que expire en 24 horas
+                const expiry = new Date();
+                expiry.setHours(expiry.getHours() + 24);
+                document.cookie = `authToken=${token};path=/;expires=${expiry.toUTCString()}`;
+
+                if ('credentials' in navigator) {
+                  const credential = new PasswordCredential({
+                    id: username,
+                    password: password,
+                  });
+                  navigator.credentials.store(credential);
+                }
+
+                // Login exitoso - ir directo a Swagger
+                window.location.href = '/api-docs';
+              } else {
+                // Mostrar mensaje de error
+                alert(
+                  'Error de inicio de sesión: ' +
+                    (data.message || 'Credenciales inválidas'),
+                );
+              }
+            })
+            .catch((error) => {
+              console.error('=== ERROR DEBUG ===');
+              console.error('Error type:', error.constructor.name);
+              console.error('Error message:', error.message);
+              console.error('Full error:', error);
+              console.error('Stack trace:', error.stack);
+              console.error('==================');
+              
+              alert('Error de inicio de sesión. Por favor, intente de nuevo. Error: ' + error.message);
+            });
+        });
+    </script>
+  </body>
+</html>

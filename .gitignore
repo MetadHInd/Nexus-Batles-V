@@ -1,3 +1,4 @@
 .env
 __pycache__/
-*.pyc
+*.pycnode_modules/ 
+node_modules/ 

@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Selección de Restaurante</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .restaurant-selection-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      
+      .restaurant-card {
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        padding: 16px;
+        margin: 12px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+      }
+      
+      .restaurant-card:hover {
+        border-color: #007bff;
+        background: #e7f3ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+      }
+      
+      .restaurant-card.selected {
+        border-color: #28a745;
+        background: #d4edda;
+      }
+      
+      .restaurant-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 8px;
+      }
+      
+      .restaurant-address {
+        color: #6c757d;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+      
+      .restaurant-role {
+        background: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        display: inline-block;
+      }
+      
+      .restaurant-role.owner {
+        background: #28a745;
+      }
+      
+      .continue-button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 20px;
+        width: 100%;
+        transition: background-color 0.3s;
+      }
+      
+      .continue-button:hover {
+        background: #0056b3;
+      }
+      
+      .continue-button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+      }
+      
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 6px;
+        margin: 20px 0;
+        border: 1px solid #f5c6cb;
+      }
+      
+      .single-restaurant-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        padding: 12px;
+        border-radius: 6px;
+        margin: 20px 0;
+        border: 1px solid #bee5eb;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="restaurant-selection-container">
+      <div class="logo-container" style="text-align: center; margin-bottom: 30px;">
+        <img src="logo.png" alt="Logo" style="max-height: 60px;" />
+        <h2 style="margin: 10px 0; color: #333;">Seleccionar Restaurante</h2>
+      </div>
+
+      <div id="loading" class="loading">
+        <p>Cargando restaurantes disponibles...</p>
+      </div>
+
+      <div id="error" class="error" style="display: none;">
+        <p id="errorMessage"></p>
+      </div>
+
+      <div id="singleRestaurantInfo" class="single-restaurant-info" style="display: none;">
+        <p>Solo tienes acceso a un restaurante/tenant. Serás redirigido automáticamente a Swagger.</p>
+      </div>
+
+      <div id="restaurantList" style="display: none;">
+        <p style="margin-bottom: 20px; color: #6c757d;">
+          Selecciona el restaurante al que quieres acceder:
+        </p>
+        <div id="restaurants"></div>
+        <button id="continueButton" class="continue-button" disabled>
+          Continuar a Swagger
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let selectedRestaurantUuid = null;
+      let restaurants = [];
+
+      // Get token from URL parameter or session storage
+      function getToken() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let token = urlParams.get('token');
+        
+        if (!token) {
+          token = sessionStorage.getItem('token');
+        }
+        
+        if (!token) {
+          // Try to get from cookies
+          const cookies = document.cookie.split(';');
+          for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'authToken') {
+              token = value;
+              break;
+            }
+          }
+        }
+        
+        return token;
+      }
+
+      // Load restaurants from the API
+      // NOTA: Este archivo está en modo de compatibilidad. Se recomienda usar tenant-selection.html
+      async function loadRestaurants() {
+        try {
+          const token = getToken();
+          
+          if (!token) {
+            showError('Token de autenticación no encontrado. Por favor, inicia sesión nuevamente.');
+            return;
+          }
+
+          console.log('🔍 Loading restaurants with token...');
+          console.warn('⚠️ DEPRECATION: Este endpoint usa restaurantes. Considere migrar a tenant-selection.html');
+          
+          const response = await fetch('/api/sysUser/user-restaurants', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          console.log('✅ Restaurants loaded:', data);
+
+          // Handle wrapped response structure: { data: { restaurants: [...] } }
+          // Also handle direct response: { restaurants: [...] }
+          let restaurantsData;
+          if (data.data) {
+            // Wrapped response from AnswerManager
+            restaurantsData = data.data;
+          } else {
+            // Direct response
+            restaurantsData = data;
+          }
+          
+          restaurants = restaurantsData.restaurants || [];
+          
+          console.log('📊 Extracted restaurants:', restaurants);
+          console.log('📊 Number of restaurants:', restaurants.length);
+          
+          if (restaurants.length === 0) {
+            showError('No tienes acceso a ningún restaurante.');
+            return;
+          }
+
+          if (restaurants.length === 1) {
+            // Single restaurant - auto-select and redirect
+            selectedRestaurantUuid = restaurants[0].uuid;
+            showSingleRestaurantInfo(restaurants[0]);
+            setTimeout(() => {
+              selectRestaurantAndRedirect();
+            }, 2000);
+          } else {
+            // Multiple restaurants - show selection
+            showRestaurantSelection();
+          }
+
+        } catch (error) {
+          console.error('=== ERROR DEBUG ===');
+          console.error('Error type:', error.constructor.name);
+          console.error('Error message:', error.message);
+          console.error('Full error:', error);
+          console.error('==================');
+          
+          showError(`Error al cargar restaurantes: ${error.message}`);
+        } finally {
+          document.getElementById('loading').style.display = 'none';
+        }
+      }
+
+      function showSingleRestaurantInfo(restaurant) {
+        console.log('📋 Showing single restaurant info for:', restaurant.name);
+        const infoDiv = document.getElementById('singleRestaurantInfo');
+        infoDiv.innerHTML = `
+          <p>Solo tienes acceso a: <strong>${restaurant.name}</strong></p>
+          <p>Serás redirigido automáticamente a Swagger en 2 segundos...</p>
+        `;
+        infoDiv.style.display = 'block';
+      }
+
+      function showRestaurantSelection() {
+        console.log('📋 Showing restaurant selection with', restaurants.length, 'restaurants');
+        const listDiv = document.getElementById('restaurantList');
+        const restaurantsContainer = document.getElementById('restaurants');
+        
+        restaurantsContainer.innerHTML = '';
+        
+        restaurants.forEach(restaurant => {
+          console.log('🏪 Adding restaurant card for:', restaurant.name);
+          const card = document.createElement('div');
+          card.className = 'restaurant-card';
+          card.onclick = () => selectRestaurant(restaurant.uuid);
+          
+          const roleClass = restaurant.is_owner ? 'owner' : '';
+          
+          card.innerHTML = `
+            <div class="restaurant-name">${restaurant.name}</div>
+            <div class="restaurant-address">${restaurant.address}</div>
+            <span class="restaurant-role ${roleClass}">
+              ${restaurant.role_in_restaurant.toUpperCase()}
+              ${restaurant.is_owner ? ' (PROPIETARIO)' : ''}
+            </span>
+          `;
+          
+          restaurantsContainer.appendChild(card);
+        });
+        
+        listDiv.style.display = 'block';
+      }
+
+      function selectRestaurant(uuid) {
+        selectedRestaurantUuid = uuid;
+        
+        // Update visual selection
+        document.querySelectorAll('.restaurant-card').forEach(card => {
+          card.classList.remove('selected');
+        });
+        
+        event.target.closest('.restaurant-card').classList.add('selected');
+        
+        // Enable continue button
+        document.getElementById('continueButton').disabled = false;
+      }
+
+      async function selectRestaurantAndRedirect() {
+        if (!selectedRestaurantUuid) {
+          showError('Por favor, selecciona un restaurante.');
+          return;
+        }
+
+        try {
+          const token = getToken();
+          
+          console.log('🏪 Selecting restaurant:', selectedRestaurantUuid);
+          const response = await fetch('/api/sysUser/select-restaurant', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              restaurantUuid: selectedRestaurantUuid
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          console.log('✅ Restaurant selected:', data);
+
+          // Handle wrapped response structure from AnswerManager
+          const responseData = data.data || data;
+
+          // Store restaurant UUID for future requests
+          sessionStorage.setItem('selectedRestaurantUuid', selectedRestaurantUuid);
+          sessionStorage.setItem('selectedTenant', selectedRestaurantUuid); // También como tenant
+          
+          // Set cookies (tenant_sub es el header principal en el sistema)
+          const expiry = new Date();
+          expiry.setHours(expiry.getHours() + 24);
+          document.cookie = `tenant_sub=${selectedRestaurantUuid};path=/;expires=${expiry.toUTCString()}`;
+          document.cookie = `restaurantSub=${selectedRestaurantUuid};path=/;expires=${expiry.toUTCString()}`; // Compatibilidad
+
+          // Redirect to Swagger
+          window.location.href = '/api-docs';
+
+        } catch (error) {
+          console.error('❌ Error selecting restaurant:', error);
+          showError(`Error al seleccionar restaurante: ${error.message}`);
+        }
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById('error');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        errorMessage.textContent = message;
+        errorDiv.style.display = 'block';
+      }
+
+      // Event listeners
+      document.getElementById('continueButton').addEventListener('click', selectRestaurantAndRedirect);
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', loadRestaurants);
+    </script>
+  </body>
+</html>

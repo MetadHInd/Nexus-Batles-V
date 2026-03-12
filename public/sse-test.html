@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE Single Session Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-connect {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-connect:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-disconnect {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-disconnect:hover {
+            background: #dc2626;
+        }
+
+        .btn-force-disconnect {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-force-disconnect:hover {
+            background: #d97706;
+        }
+
+        .btn-send-test {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-send-test:hover {
+            background: #059669;
+        }
+
+        .btn-clear {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #4b5563;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-connected {
+            background: #10b981;
+        }
+
+        .status-disconnected {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .events {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .events h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .events-list {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f9fafb;
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        .event-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .event-item.session-terminated {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .event-item.heartbeat {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+            opacity: 0.9;
+        }
+
+        .event-item.heartbeat .event-type::before {
+            content: '💚 ';
+        }
+
+        .event-time {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .event-type {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .event-data {
+            color: #555;
+            font-size: 13px;
+            white-space: pre-wrap;
+            background: #f3f4f6;
+            padding: 8px;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .info-box h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+
+        .info-box li {
+            color: #1e3a8a;
+            margin-bottom: 5px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .heartbeat-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        .heartbeat-counter {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 SSE Single Session Test</h1>
+            <p>Herramienta de prueba para el sistema de sesión única. Abre esta página en múltiples pestañas/ventanas para simular diferentes dispositivos.</p>
+        </div>
+
+        <div class="controls">
+            <h2>Configuración de Conexión</h2>
+            
+            <div class="form-group">
+                <label>URL del Servidor:</label>
+                <input type="text" id="serverUrl" value="http://localhost:3000" placeholder="http://localhost:3000">
+            </div>
+
+            <div class="form-group">
+                <label>Manager ID (Usuario):</label>
+                <input type="text" id="managerId" value="test_user_123" placeholder="test_user_123">
+            </div>
+
+            <div class="form-group">
+                <label>Tenant ID:</label>
+                <input type="text" id="tenantId" value="tenant_001" placeholder="tenant_001">
+            </div>
+
+            <div class="form-group">
+                <label>JWT Token (opcional, si tienes uno real):</label>
+                <input type="text" id="jwtToken" placeholder="eyJhbGciOiJIUzI1NiIs...">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-connect" id="connectBtn" onclick="connect()">
+                    🔌 Conectar
+                </button>
+                <button class="btn-disconnect" id="disconnectBtn" onclick="disconnect()" disabled>
+                    ⏹️ Desconectar
+                </button>
+                <button class="btn-force-disconnect" onclick="forceDisconnect()">
+                    🔴 Desconexión Forzada (API)
+                </button>
+                <button class="btn-send-test" onclick="sendTestEvent()">
+                    📤 Enviar Evento de Prueba
+                </button>
+                <button class="btn-clear" onclick="clearEvents()">
+                    🗑️ Limpiar
+                </button>
+            </div>
+
+            <div class="info-box">
+                <h3>📝 Instrucciones de Prueba:</h3>
+                <ul>
+                    <li><strong>Paso 1:</strong> Abre esta página en 2 o más pestañas del navegador</li>
+                    <li><strong>Paso 2:</strong> En cada pestaña, usa el MISMO "Manager ID" (simula mismo usuario)</li>
+                    <li><strong>Paso 3:</strong> Conecta desde la primera pestaña - verás "Conectado"</li>
+                    <li><strong>Paso 4:</strong> Conecta desde la segunda pestaña - verás cómo la primera recibe "session_terminated"</li>
+                    <li><strong>Paso 5:</strong> Prueba "Desconexión Forzada" para cerrar todas las sesiones del usuario</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="status">
+            <h2>Estado de Conexión</h2>
+            <p>
+                <span class="status-indicator" id="statusIndicator"></span>
+                <strong id="statusText">Desconectado</strong>
+                <span id="heartbeatIndicator" class="heartbeat-indicator" style="display: none;"></span>
+                <span id="heartbeatCounter" class="heartbeat-counter" style="display: none;">0</span>
+            </p>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="eventsReceived">0</div>
+                    <div class="stat-label">Eventos Recibidos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="heartbeats">0</div>
+                    <div class="stat-label">Heartbeats</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="reconnects">0</div>
+                    <div class="stat-label">Reconexiones</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="terminated">0</div>
+                    <div class="stat-label">Sesiones Terminadas</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="events">
+            <h2>📡 Eventos en Tiempo Real</h2>
+            <div class="events-list" id="eventsList">
+                <p style="color: #999; text-align: center;">No hay eventos aún. Conéctate para comenzar.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        let stats = {
+            eventsReceived: 0,
+            heartbeats: 0,
+            reconnects: 0,
+            terminated: 0
+        };
+
+        function updateStats() {
+            document.getElementById('eventsReceived').textContent = stats.eventsReceived;
+            document.getElementById('heartbeats').textContent = stats.heartbeats;
+            document.getElementById('reconnects').textContent = stats.reconnects;
+            document.getElementById('terminated').textContent = stats.terminated;
+        }
+
+        function addEvent(type, data, isError = false) {
+            const eventsList = document.getElementById('eventsList');
+            const eventItem = document.createElement('div');
+            
+            let className = 'event-item';
+            if (type === 'session_terminated') className += ' session-terminated';
+            if (type === 'heartbeat') className += ' heartbeat';
+            
+            eventItem.className = className;
+            
+            const time = new Date().toLocaleTimeString('es-ES');
+            
+            eventItem.innerHTML = `
+                <div class="event-time">${time}</div>
+                <div class="event-type">${type}</div>
+                <div class="event-data">${JSON.stringify(data, null, 2)}</div>
+            `;
+            
+            // Si la lista está vacía, remueve el mensaje placeholder
+            if (eventsList.querySelector('p')) {
+                eventsList.innerHTML = '';
+            }
+            
+            eventsList.insertBefore(eventItem, eventsList.firstChild);
+            
+            // Mantener solo últimos 50 eventos
+            while (eventsList.children.length > 50) {
+                eventsList.removeChild(eventsList.lastChild);
+            }
+
+            stats.eventsReceived++;
+            if (type === 'heartbeat') {
+                stats.heartbeats++;
+                // Actualizar contador de heartbeats en tiempo real
+                const heartbeatCounter = document.getElementById('heartbeatCounter');
+                if (heartbeatCounter) {
+                    heartbeatCounter.textContent = `💚 ${stats.heartbeats}`;
+                }
+            }
+            if (type === 'session_terminated') {
+                stats.terminated++;
+                // Mostrar alerta visual
+                alert('⚠️ SESIÓN TERMINADA\n\n' + (data.message || 'Tu sesión fue cerrada'));
+            }
+            updateStats();
+        }
+
+        function updateStatus(connected) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            const heartbeatIndicator = document.getElementById('heartbeatIndicator');
+            const heartbeatCounter = document.getElementById('heartbeatCounter');
+            
+            if (connected) {
+                indicator.className = 'status-indicator status-connected';
+                statusText.textContent = 'Conectado';
+                statusText.style.color = '#10b981';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                
+                // Mostrar indicador de heartbeat
+                if (heartbeatIndicator) heartbeatIndicator.style.display = 'inline-block';
+                if (heartbeatCounter) heartbeatCounter.style.display = 'inline-block';
+            } else {
+                indicator.className = 'status-indicator status-disconnected';
+                statusText.textContent = 'Desconectado';
+                statusText.style.color = '#ef4444';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                
+                // Ocultar indicador de heartbeat
+                if (heartbeatIndicator) heartbeatIndicator.style.display = 'none';
+                if (heartbeatCounter) heartbeatCounter.style.display = 'none';
+            }
+        }
+
+        function connect() {
+            if (eventSource) {
+                addEvent('error', { message: 'Ya existe una conexión activa' }, true);
+                return;
+            }
+
+            const serverUrl = document.getElementById('serverUrl').value;
+            const managerId = document.getElementById('managerId').value;
+            const tenantId = document.getElementById('tenantId').value;
+            const token = document.getElementById('jwtToken').value;
+
+            if (!managerId) {
+                alert('Por favor ingresa un Manager ID');
+                return;
+            }
+
+            // Construir URL del SSE endpoint de prueba
+            let url = `${serverUrl}/sse/test/stream?managerId=${encodeURIComponent(managerId)}`;
+            if (tenantId) url += `&tenantId=${encodeURIComponent(tenantId)}`;
+            if (token) url += `&token=${encodeURIComponent(token)}`;
+
+            addEvent('system', { message: 'Intentando conectar...', url });
+
+            eventSource = new EventSource(url);
+
+            eventSource.onopen = () => {
+                addEvent('system', { message: '✅ Conexión establecida' });
+                updateStatus(true);
+            };
+
+            eventSource.onerror = (error) => {
+                addEvent('error', { 
+                    message: '❌ Error de conexión',
+                    readyState: eventSource.readyState,
+                    details: 'Verifica que el servidor esté corriendo y el endpoint exista'
+                }, true);
+                
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    updateStatus(false);
+                    eventSource = null;
+                } else {
+                    stats.reconnects++;
+                    updateStats();
+                }
+            };
+
+            // Escuchar todos los tipos de eventos
+            eventSource.addEventListener('connected', (e) => {
+                const data = JSON.parse(e.data);
+                addEvent('connected', data);
+            });
+
+            eventSource.addEventListener('heartbeat', (e) => {
+                const data = JSON.parse(e.data);
+                addEvent('heartbeat', data);
+            });
+
+            eventSource.addEventListener('session_terminated', (e) => {
+                const data = JSON.parse(e.data);
+                addEvent('session_terminated', data);
+                // Auto-desconectar después de recibir session_terminated
+                setTimeout(() => {
+                    disconnect();
+                }, 2000);
+            });
+
+            eventSource.addEventListener('test_event', (e) => {
+                const data = JSON.parse(e.data);
+                addEvent('test_event', data);
+            });
+
+            // Evento genérico para cualquier otro tipo
+            eventSource.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    // Detectar el tipo de evento basado en el campo 'type' del payload
+                    const eventType = data.type || 'message';
+                    addEvent(eventType, data);
+                } catch (err) {
+                    addEvent('message', { raw: e.data });
+                }
+            };
+        }
+
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                addEvent('system', { message: 'Desconectado manualmente' });
+                updateStatus(false);
+            }
+        }
+
+        async function forceDisconnect() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const managerId = document.getElementById('managerId').value;
+
+            if (!managerId) {
+                alert('Por favor ingresa un Manager ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${serverUrl}/sse/test/force-disconnect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        managerId,
+                        reason: 'Test de desconexión forzada desde HTML'
+                    })
+                });
+
+                const result = await response.json();
+                addEvent('system', { 
+                    message: '🔴 Desconexión forzada ejecutada',
+                    result
+                });
+            } catch (error) {
+                addEvent('error', { 
+                    message: 'Error al forzar desconexión',
+                    error: error.message 
+                }, true);
+            }
+        }
+
+        async function sendTestEvent() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const managerId = document.getElementById('managerId').value;
+
+            try {
+                const response = await fetch(`${serverUrl}/sse/test/send-event`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        managerId,
+                        eventType: 'test_event',
+                        payload: {
+                            message: 'Este es un evento de prueba',
+                            timestamp: new Date().toISOString()
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                addEvent('system', { 
+                    message: '📤 Evento enviado al servidor',
+                    result
+                });
+            } catch (error) {
+                addEvent('error', { 
+                    message: 'Error al enviar evento',
+                    error: error.message 
+                }, true);
+            }
+        }
+
+        function clearEvents() {
+            document.getElementById('eventsList').innerHTML = 
+                '<p style="color: #999; text-align: center;">Eventos limpiados. Esperando nuevos eventos...</p>';
+            stats = {
+                eventsReceived: 0,
+                heartbeats: 0,
+                reconnects: 0,
+                terminated: 0
+            };
+            updateStats();
+        }
+
+        // Cleanup al cerrar la página
+        window.addEventListener('beforeunload', () => {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+
+        // Inicializar
+        updateStatus(false);
+        updateStats();
+    </script>
+</body>
+</html>

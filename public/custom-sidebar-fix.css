@@ -1,0 +1,51 @@
+/* Fix para ocultar scroll específico del sidebar de Product Categories */
+
+/* Ocultar scrollbar en el sidebar de categorías de productos */
+.product-categories-sidebar,
+.sidebar-product-categories,
+.categories-sidebar,
+[class*="product-categories"] .sidebar,
+[class*="categories"] .sidebar-content,
+.order-creation-sidebar .product-categories,
+.sidebar .product-categories-section {
+  /* Ocultar scrollbar pero mantener funcionalidad de scroll */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.product-categories-sidebar::-webkit-scrollbar,
+.sidebar-product-categories::-webkit-scrollbar,
+.categories-sidebar::-webkit-scrollbar,
+[class*="product-categories"] .sidebar::-webkit-scrollbar,
+[class*="categories"] .sidebar-content::-webkit-scrollbar,
+.order-creation-sidebar .product-categories::-webkit-scrollbar,
+.sidebar .product-categories-section::-webkit-scrollbar {
+  display: none;
+}
+
+/* Alternativa más específica si el problema persiste */
+.order-sidebar .categories-list,
+.sidebar-categories .scroll-container,
+.product-categories-container {
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.order-sidebar .categories-list::-webkit-scrollbar,
+.sidebar-categories .scroll-container::-webkit-scrollbar,
+.product-categories-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Si necesitas ser más agresivo con la ocultación */
+.sidebar *::-webkit-scrollbar {
+  width: 0px !important;
+  background: transparent !important;
+}
+
+.sidebar * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
