@@ -1,57 +1,93 @@
 import { create } from 'zustand';
-import { AuthTokens, PublicPlayer } from '@/types';
+import { persist } from 'zustand/middleware';
+import type { AuthTokens, PublicPlayer } from '@/types';
 import { authApi } from '@/api/auth';
 
 interface AuthState {
-  player: Pick<PublicPlayer, 'id' | 'username' | 'role'> | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-
-  login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  user: AuthTokens['player'] | null;
+  /**
+   * Alias para compatibilidad con componentes que esperan `player`.
+   */
+  player: AuthTokens['player'] | null;
+  refreshToken: string | null;
+  setAuth: (payload: AuthTokens | AuthTokens['player'] | null) => void;
   logout: () => Promise<void>;
-  clearError: () => void;
+  clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  player: null,
-  isAuthenticated: !!localStorage.getItem('accessToken'),
-  isLoading: false,
-  error: null,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      isAuthenticated: !!localStorage.getItem('accessToken'),
+      user: null,
+      player: null,
+      refreshToken: null,
+      
+      setAuth: (payload) => {
+        if (!payload) {
+          set({
+            isAuthenticated: false,
+            user: null,
+            player: null,
+            refreshToken: null,
+          });
+          return;
+        }
 
-  login: async (email, password) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data } = await authApi.login({ email, password });
-      const tokens = data.data;
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
-      set({ player: tokens.player, isAuthenticated: true, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.response?.data?.message ?? 'Login failed', isLoading: false });
-      throw err;
+        const looksLikeTokens =
+          typeof payload === 'object' &&
+          'accessToken' in payload &&
+          'refreshToken' in payload &&
+          'player' in payload;
+
+        if (looksLikeTokens) {
+          const tokens = payload as AuthTokens;
+          localStorage.setItem('accessToken', tokens.accessToken);
+          set({
+            isAuthenticated: true,
+            user: tokens.player,
+            player: tokens.player,
+            refreshToken: tokens.refreshToken,
+          });
+          return;
+        }
+
+        // Compat: si solo recibimos el jugador, igual lo guardamos.
+        const p = payload as AuthTokens['player'];
+        set({
+          isAuthenticated: true,
+          user: p,
+          player: p,
+        });
+      },
+
+      logout: async () => {
+        const refreshToken = useAuthStore.getState().refreshToken;
+        try {
+          if (refreshToken) await authApi.logout(refreshToken);
+        } catch {
+          // Ignorar: si falla el backend, igual limpiamos sesión local.
+        } finally {
+          localStorage.removeItem('accessToken');
+          set({
+            isAuthenticated: false,
+            user: null,
+            player: null,
+            refreshToken: null,
+          });
+        }
+      },
+      
+      clearAuth: () => set({
+        isAuthenticated: false,
+        user: null,
+        player: null,
+        refreshToken: null,
+      }),
+    }),
+    {
+      name: 'auth-storage',
     }
-  },
-
-  register: async (username, email, password) => {
-    set({ isLoading: true, error: null });
-    try {
-      await authApi.register({ username, email, password });
-      set({ isLoading: false });
-    } catch (err: any) {
-      set({ error: err.response?.data?.message ?? 'Registration failed', isLoading: false });
-      throw err;
-    }
-  },
-
-  logout: async () => {
-    const refreshToken = localStorage.getItem('refreshToken') ?? '';
-    try { await authApi.logout(refreshToken); } catch {}
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    set({ player: null, isAuthenticated: false });
-  },
-
-  clearError: () => set({ error: null }),
-}));
+  )
+);

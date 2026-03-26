@@ -1,16 +1,31 @@
+// ─────────────────────────────────────────────────────────────
+//  API — Módulo Misiones (integrado: branch 1 + branch 2)
+// ─────────────────────────────────────────────────────────────
 import { apiClient } from './client';
-import { Mission, MissionDifficulty, ApiResponse } from '@/types';
+import type { Mission, GenerateMissionResponse } from '@/types/mission';
 
-export const missionsApi = {
-  getActive: () =>
-    apiClient.get<ApiResponse<Mission[]>>('/missions/active'),
+const BASE = '/missions';
 
-  getHistory: (params?: { limit?: number; offset?: number }) =>
-    apiClient.get<ApiResponse<Mission[]>>('/missions/history', { params }),
+// GET /missions/active — misiones activas del jugador
+export async function getActiveMissions(): Promise<Mission[]> {
+  const { data } = await apiClient.get<{ estado: string; datos: Mission[] }>(`${BASE}/active`);
+  return data.datos.filter(Boolean);
+}
 
-  generate: (difficulty: MissionDifficulty = 'MEDIUM') =>
-    apiClient.post<ApiResponse<Mission>>('/missions/generate', { difficulty }),
+// GET /missions/history — historial de misiones
+export async function getMissionHistory(): Promise<Mission[]> {
+  const { data } = await apiClient.get<{ estado: string; datos: Mission[] }>(`${BASE}/history`);
+  return data.datos;
+}
 
-  complete: (missionId: string) =>
-    apiClient.post<ApiResponse<Mission>>(`/missions/${missionId}/complete`),
-};
+// POST /missions/generate — IA genera nueva misión
+export async function generateAiMission(): Promise<GenerateMissionResponse> {
+  const { data } = await apiClient.post<GenerateMissionResponse>(`${BASE}/generate`);
+  return data;
+}
+
+// POST /missions/:id/complete — completar misión
+export async function completeMission(id: string): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>(`${BASE}/${id}/complete`);
+  return data;
+}

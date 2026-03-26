@@ -1,126 +1,249 @@
-/**
- * InventoryPage.tsx — Inventario del jugador
- * Carga desde playerStore (ya hidratado en MainLayout).
- * Si el inventario no se cargó, lo pide de nuevo.
- */
-
-import { useEffect } from 'react';
-import { usePlayerStore } from '@/store/playerStore';
-import type { InventoryItem, ItemRarity } from '@/types';
-
-const RARITY_CONFIG: Record<ItemRarity, { label: string; color: string; glow: string; border: string }> = {
-  COMMON:    { label: 'Común',      color: '#9E9E9E', glow: 'rgba(158,158,158,0.1)', border: 'rgba(100,100,100,0.2)' },
-  RARE:      { label: 'Raro',       color: '#30B8E8', glow: 'rgba(26,127,170,0.15)', border: 'rgba(26,127,170,0.3)' },
-  EPIC:      { label: 'Épico',      color: '#B06EFF', glow: 'rgba(74,21,128,0.15)',  border: 'rgba(123,53,208,0.3)' },
-  LEGENDARY: { label: 'Legendario', color: '#F5C842', glow: 'rgba(200,134,10,0.2)',  border: 'rgba(200,134,10,0.4)' },
-};
-
-const TYPE_EMOJI: Record<string, string> = {
-  WEAPON: '⚔', ARMOR: '🛡', SPELL: '📜', POTION: '🧪', ARTIFACT: '🔮',
-};
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { inventoryApi, Item, Filters } from '@/api/inventory';
+import { getErrorMessage } from '@/api/client';
+import Pagination from '@/components/Pagination';
+import './InventoryPage.css';
 
 export default function InventoryPage() {
-  const { inventory, fetchInventory, isLoading } = usePlayerStore();
+  const navigate = useNavigate();
+  
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  
+  const [selectedTipo, setSelectedTipo] = useState('');
+  const [selectedRareza, setSelectedRareza] = useState('');
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Item[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  useEffect(() => {
-    if (inventory.length === 0) fetchInventory();
+  const fetchInventory = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  
+  try {
+    const filters: Filters = {
+      page: currentPage,
+      limit: 16
+    };
+    
+    if (selectedTipo) filters.tipo = selectedTipo;
+    if (selectedRareza) filters.rareza = selectedRareza;
+    
+    const response = await inventoryApi.getItems(filters);
+    console.log('📦 Respuesta del backend:', response); // 👈 VERIFICAR
+    console.log('Total items:', response.total); // 👈 DEBERÍA SER 40
+    console.log('📊 totalPages:', totalPages, 'totalPages > 1?', totalPages > 1);
+    
+    setItems(response.items);
+    setTotalPages(response.totalPages);
+    setTotalItems(response.total);
+  } catch (err) {
+    setError(getErrorMessage(err));
+  } finally {
+    setLoading(false);
+  }
+}, [currentPage, selectedTipo, selectedRareza]);
+
+  const handleSearch = useCallback(async (query: string) => {
+    if (query.length === 0) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    if (query.length < 4) return;
+
+    try {
+      const response = await inventoryApi.searchItems(query);
+      setSearchResults(response.results);
+      setIsSearching(true);
+    } catch (err) {
+      console.error('Error en búsqueda:', err);
+    }
   }, []);
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (searchQuery) handleSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [searchQuery, handleSearch]);
+
+  useEffect(() => {
+    if (!isSearching) fetchInventory();
+  }, [fetchInventory, isSearching]);
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setIsSearching(false);
+  };
+
+  const displayItems = isSearching ? searchResults : items;
+
+  const getRarityColor = (rareza: string) => {
+    switch (rareza) {
+      case 'Legendaria': return 'var(--rarity-legendary)';
+      case 'Épica': return 'var(--rarity-epic)';
+      case 'Rara': return 'var(--rarity-rare)';
+      case 'Común': return 'var(--rarity-common)';
+      default: return 'var(--color-rune-gray)';
+    }
+  };
+
+  const getTypeEmoji = (tipo: string) => {
+    switch (tipo) {
+      case 'Arma': return '⚔️';
+      case 'Armadura': return '🛡️';
+      case 'Héroe': return '🧙';
+      case 'Habilidad': return '🔮';
+      case 'Ítem': return '📜';
+      case 'Épica': return '👑';
+      default: return '❓';
+    }
+  };
+
   return (
-    <div className="page-content fade-in">
-      <div className="page-header">
-        <h1 className="page-title">🎒 Inventario</h1>
-        <p className="page-subtitle">Todos los ítems que has adquirido en el Nexus</p>
+    <div className="inventory-page">
+      <header className="inventory-header">
+        <h1 className="inventory-title">🎒 MI INVENTARIO</h1>
+        <p className="inventory-subtitle">
+          {totalItems} {totalItems === 1 ? 'ítem' : 'ítems'} en tu colección
+        </p>
+      </header>
+
+      <div className="filters-section">
+        <div className="search-wrapper">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Buscar ítems... (mínimo 4 caracteres)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {isSearching && (
+            <button className="clear-search" onClick={clearSearch}>
+              ✕ Limpiar búsqueda
+            </button>
+          )}
+        </div>
+
+        <select
+          className="filter-select"
+          value={selectedTipo}
+          onChange={(e) => { setSelectedTipo(e.target.value); setCurrentPage(1); }}
+          disabled={isSearching}
+        >
+          <option value="">TODOS LOS TIPOS</option>
+          <option value="Héroe">HÉROE</option>
+          <option value="Arma">ARMA</option>
+          <option value="Armadura">ARMADURA</option>
+          <option value="Habilidad">HABILIDAD</option>
+          <option value="Ítem">ÍTEM</option>
+          <option value="Épica">ÉPICA</option>
+        </select>
+
+        <select
+          className="filter-select"
+          value={selectedRareza}
+          onChange={(e) => { setSelectedRareza(e.target.value); setCurrentPage(1); }}
+          disabled={isSearching}
+        >
+          <option value="">TODAS LAS RAREZAS</option>
+          <option value="Común">COMÚN</option>
+          <option value="Rara">RARA</option>
+          <option value="Épica">ÉPICA</option>
+          <option value="Legendaria">LEGENDARIA</option>
+        </select>
       </div>
 
-      <div className="nbv-divider"><span className="nbv-divider-icon">⚜</span></div>
+      {loading && (
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>CARGANDO INVENTARIO...</p>
+        </div>
+      )}
 
-      {isLoading && inventory.length === 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="nbv-skeleton" style={{ height: 220, borderRadius: 2 }} />
-          ))}
-        </div>
-      ) : inventory.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '5rem 1rem', color: 'var(--rune-gray)', fontStyle: 'italic' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.4 }}>🎒</div>
-          <p>Tu inventario está vacío.</p>
-          <p style={{ marginTop: '0.3rem', fontSize: '0.85rem' }}>Visita la tienda para adquirir ítems legendarios.</p>
-        </div>
-      ) : (
+      {error && !loading && (
+        <div className="error-state">⚠️ {error}</div>
+      )}
+
+      {!loading && !error && (
         <>
-          <div style={{ marginBottom: '1.2rem', color: 'var(--rune-gray)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-            {inventory.length} ítem{inventory.length !== 1 ? 's' : ''} en tu posesión
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-            {inventory.map(item => <InventoryCard key={item.id} item={item} />)}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function InventoryCard({ item }: { item: InventoryItem }) {
-  const cfg   = RARITY_CONFIG[item.rarity] ?? RARITY_CONFIG.COMMON;
-  const emoji = TYPE_EMOJI[item.type] ?? '✦';
-
-  return (
-    <div style={{
-      background: 'linear-gradient(145deg, var(--stone), var(--stone-dark))',
-      border: `1px solid ${cfg.border}`,
-      boxShadow: `0 0 16px ${cfg.glow}`,
-      padding: '1rem',
-      position: 'relative',
-      transition: 'transform 0.2s, box-shadow 0.2s',
-    }}
-    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; }}
-    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; }}
-    >
-      {/* Corner decoration */}
-      <span style={{ position: 'absolute', top: 6, right: 6, color: 'var(--gold-dark)', fontSize: '0.6rem', opacity: 0.5 }}>✦</span>
-
-      {/* Icon area */}
-      <div style={{
-        height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '2.5rem', marginBottom: '0.8rem',
-        background: `rgba(0,0,0,0.2)`, border: `1px solid ${cfg.border}`,
-      }}>
-        {emoji}
-      </div>
-
-      {/* Rarity badge */}
-      <span style={{
-        display: 'inline-block', marginBottom: '0.5rem',
-        fontFamily: 'var(--font-heading)', fontSize: '0.55rem',
-        letterSpacing: '0.15em', textTransform: 'uppercase',
-        padding: '0.1rem 0.4rem', color: cfg.color,
-        background: `rgba(0,0,0,0.3)`, border: `1px solid ${cfg.border}`,
-      }}>{cfg.label}</span>
-
-      <div style={{ fontFamily: 'var(--font-heading)', fontSize: '0.8rem', color: 'var(--parchment)', marginBottom: '0.3rem', letterSpacing: '0.04em' }}>
-        {item.name}
-      </div>
-      <div style={{ fontSize: '0.75rem', color: 'var(--parchment-dim)', fontStyle: 'italic', lineHeight: 1.4 }}>
-        {item.description || item.type}
-      </div>
-
-      {/* Stats */}
-      {Object.keys(item.stats ?? {}).length > 0 && (
-        <div style={{ marginTop: '0.6rem', borderTop: `1px solid ${cfg.border}`, paddingTop: '0.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.2rem 0.5rem' }}>
-          {Object.entries(item.stats).map(([k, v]) => (
-            <div key={k} style={{ fontSize: '0.68rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--rune-gray)', textTransform: 'capitalize' }}>{k}</span>
-              <span style={{ color: cfg.color, fontFamily: 'var(--font-heading)' }}>+{v}</span>
+          {displayItems.length === 0 ? (
+            <div className="empty-state">
+              {isSearching
+                ? `No se encontraron resultados para "${searchQuery}"`
+                : 'Tu inventario está vacío'}
             </div>
-          ))}
-        </div>
-      )}
+          ) : (
+            <>
+              <div className="items-grid">
+                {displayItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="item-card"
+                    onClick={() => navigate(`/inventory/${item.id}`)}
+                    style={{
+                      borderColor: getRarityColor(item.rareza),
+                      boxShadow: `0 0 15px ${getRarityColor(item.rareza)}33`
+                    }}
+                  >
+                    <div className="item-card__image">
+                      {item.imagen && !item.imagen.includes('example') ? (
+                        <img src={item.imagen} alt={item.nombre} />
+                      ) : (
+                        <span className="item-emoji">{getTypeEmoji(item.tipo)}</span>
+                      )}
+                    </div>
 
-      {item.isEquipped && (
-        <div style={{ marginTop: '0.5rem', padding: '0.2rem 0.4rem', background: 'rgba(40,192,96,0.1)', border: '1px solid rgba(40,192,96,0.3)', textAlign: 'center', fontFamily: 'var(--font-heading)', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--emerald-bright)' }}>
-          EQUIPADO
-        </div>
+                    <div className="item-card__badge" style={{
+                      background: `${getRarityColor(item.rareza)}33`,
+                      borderColor: getRarityColor(item.rareza),
+                      color: getRarityColor(item.rareza)
+                    }}>
+                      {item.rareza}
+                    </div>
+
+                    <h3 className="item-card__name">{item.nombre}</h3>
+                    <p className="item-card__type">{item.tipo}</p>
+
+                    <div className="item-card__stats">
+                      <div className="stat">
+                        <span className="stat-label">ATQ</span>
+                        <span className="stat-value" style={{ color: 'var(--color-crimson-bright)' }}>
+                          {item.ataque}
+                        </span>
+                      </div>
+                      <div className="stat">
+                        <span className="stat-label">DEF</span>
+                        <span className="stat-value" style={{ color: 'var(--color-ice-bright)' }}>
+                          {item.defensa}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {!isSearching && totalPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  
+                />
+              )}
+            </>
+          )}
+        </>
       )}
     </div>
   );

@@ -1,174 +1,157 @@
-/**
- * LoginPage.tsx — Pantalla de autenticación
- * Reemplaza el placeholder con la pantalla medieval de login.
- * Sin sidebar ni chatbot (GuestRoute → fuera del MainLayout).
- */
-
-import { useState, FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/store/authStore';
-import { usePlayerStore } from '@/store/playerStore';
-import { useChatbotStore } from '@/store/chatbotStore';
+import { getErrorMessage } from '@/api/client';
 
 export default function LoginPage() {
-  const [email, setEmail]       = useState('');
+  const navigate = useNavigate();
+  const setAuth = useAuthStore(s => s.setAuth);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading, error, clearError } = useAuthStore();
-  const fetchProfile = usePlayerStore((s) => s.fetchProfile);
-  const setSession   = useChatbotStore((s) => s.setSession);
-  const navigate     = useNavigate();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
+    setError('');
+    setLoading(true);
+
     try {
-      await login(email.trim(), password);
-      // Iniciar carga del perfil y sesión del chatbot
-      const player = useAuthStore.getState().player;
-      if (player?.id) {
-        setSession(player.id);
-        fetchProfile();
-      }
-      navigate('/dashboard');
-    } catch {
-      // El error ya está en el store
+      const res = await authApi.login({ email, password });
+      setAuth(res.data.data);
+      navigate('/inventory');
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="auth-page">
-      {/* Runas de fondo */}
-      <div className="rune-bg" aria-hidden="true">
-        <span>⚔</span><span>⚜</span><span>🔮</span>
-        <span>⚡</span><span>✦</span><span>◈</span>
-      </div>
-
-      <div className="auth-card fade-in">
-        {/* Crest */}
-        <div className="auth-card__crest">⚜</div>
-        <h1 className="auth-card__title">Entrar al Nexus</h1>
-        <p className="auth-card__subtitle">Identifícate, aventurero</p>
-
-        <div className="nbv-divider"><span className="nbv-divider-icon" style={{ fontSize: '0.7rem' }}>⚔</span></div>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--color-dungeon)'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '420px',
+        padding: '2.5rem 2rem',
+        background: 'linear-gradient(145deg, var(--color-stone), var(--color-stone-dark))',
+        border: '1px solid var(--color-gold-dark)',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>⚜</div>
+        <h1 style={{
+          fontFamily: 'var(--font-title)',
+          fontSize: '1.3rem',
+          color: 'var(--color-gold)',
+          marginBottom: '0.3rem'
+        }}>
+          Entrar al Nexus
+        </h1>
+        <p style={{
+          fontStyle: 'italic',
+          color: 'var(--color-parchment-dim)',
+          fontSize: '0.9rem',
+          marginBottom: '1.8rem'
+        }}>
+          Identifícate, aventurero
+        </p>
 
         <form onSubmit={handleSubmit}>
-          <label className="auth-label">Correo del Reino</label>
           <input
-            className={`nbv-input${error ? ' error' : ''}`}
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="tu@nexus.com"
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Tu correo..."
             required
-            autoComplete="email"
+            style={{
+              width: '100%',
+              padding: '0.7rem 1rem',
+              marginBottom: '0.6rem',
+              background: 'rgba(0,0,0,0.4)',
+              border: '1px solid rgba(200,134,10,0.25)',
+              color: 'var(--color-parchment)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '1rem'
+            }}
           />
 
-          <label className="auth-label">Contraseña Secreta</label>
           <input
-            className={`nbv-input${error ? ' error' : ''}`}
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="••••••••"
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Contraseña secreta..."
             required
-            autoComplete="current-password"
+            style={{
+              width: '100%',
+              padding: '0.7rem 1rem',
+              marginBottom: '0.6rem',
+              background: 'rgba(0,0,0,0.4)',
+              border: '1px solid rgba(200,134,10,0.25)',
+              color: 'var(--color-parchment)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '1rem'
+            }}
           />
 
           {error && (
-            <div className="nbv-notif nbv-notif-error" style={{ marginBottom: '1rem' }}>
-              <span className="nbv-notif-icon">💀</span>
-              <div>
-                <div className="nbv-notif-title">Acceso Denegado</div>
-                <div className="nbv-notif-msg">{error}</div>
-              </div>
+            <div style={{
+              padding: '0.5rem',
+              marginBottom: '0.6rem',
+              background: 'rgba(168,16,32,0.1)',
+              border: '1px solid var(--color-crimson)',
+              color: 'var(--color-crimson-bright)',
+              fontSize: '0.85rem'
+            }}>
+              {error}
             </div>
           )}
 
           <button
             type="submit"
-            className="nbv-btn nbv-btn-primary"
-            style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem', clipPath: 'none' }}
-            disabled={isLoading}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '0.7rem 1.5rem',
+              marginTop: '0.5rem',
+              fontFamily: 'var(--font-heading)',
+              fontSize: '0.75rem',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              background: 'linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-bright))',
+              color: 'var(--color-abyss)',
+              border: 'none',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1
+            }}
           >
-            {isLoading ? '⚜ Verificando...' : '⚔ Entrar al Campo de Batalla'}
+            {loading ? 'Entrando...' : '⚔ Entrar al Campo de Batalla'}
           </button>
         </form>
 
-        <div className="auth-card__footer">
+        <div style={{
+          marginTop: '1rem',
+          fontSize: '0.8rem',
+          color: 'var(--color-rune-gray)',
+          fontStyle: 'italic'
+        }}>
           ¿Eres nuevo?{' '}
-          <Link to="/register">Forja tu leyenda aquí</Link>
+          <Link
+            to="/register"
+            style={{
+              color: 'var(--color-gold)',
+              textDecoration: 'none'
+            }}
+          >
+            Forja tu leyenda aquí
+          </Link>
         </div>
       </div>
-
-      <style>{`
-        .auth-page {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(200,134,10,0.06) 0%, transparent 70%), var(--abyss);
-          padding: 1rem;
-          position: relative;
-        }
-        .auth-card {
-          width: 100%;
-          max-width: 420px;
-          background: linear-gradient(145deg, var(--stone), var(--stone-dark));
-          border: 1px solid rgba(200,134,10,0.3);
-          padding: 2.5rem 2rem;
-          position: relative;
-          z-index: 1;
-          box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(200,134,10,0.08);
-        }
-        .auth-card::after {
-          content: '';
-          position: absolute;
-          bottom: 0; right: 0;
-          width: 30px; height: 30px;
-          border-right: 1px solid var(--gold-dark);
-          border-bottom: 1px solid var(--gold-dark);
-        }
-        .auth-card__crest {
-          text-align: center;
-          font-size: 2.5rem;
-          color: var(--gold);
-          filter: drop-shadow(0 0 16px rgba(200,134,10,0.6));
-          margin-bottom: 0.5rem;
-        }
-        .auth-card__title {
-          font-family: var(--font-title);
-          font-size: 1.6rem;
-          text-align: center;
-          color: var(--gold);
-          filter: drop-shadow(0 0 12px rgba(200,134,10,0.4));
-          margin-bottom: 0.3rem;
-        }
-        .auth-card__subtitle {
-          text-align: center;
-          font-style: italic;
-          font-size: 0.9rem;
-          color: var(--parchment-dim);
-          margin-bottom: 0;
-        }
-        .auth-label {
-          display: block;
-          font-family: var(--font-heading);
-          font-size: 0.68rem;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          color: var(--gold);
-          margin-bottom: 0.35rem;
-        }
-        .auth-card__footer {
-          text-align: center;
-          margin-top: 1.2rem;
-          font-size: 0.85rem;
-          color: var(--rune-gray);
-          font-style: italic;
-        }
-        .auth-card__footer a { color: var(--gold); }
-        .auth-card__footer a:hover { color: var(--gold-light); }
-      `}</style>
     </div>
   );
 }
