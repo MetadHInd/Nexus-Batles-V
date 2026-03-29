@@ -41,9 +41,43 @@ DEFAULT_SUGGESTIONS = [
     "¿Cómo funciona el combate?",
 ]
 
-INAPPROPRIATE_WORDS = [
-    "hack", "cheat", "trampa", "exploit", "vulnerabilidad",
-    "idiota", "estúpido", "imbécil", "maldito", "insulto",
+# ─── Palabras prohibidas ──────────────────────────────────────────────────────
+FORBIDDEN_WORDS: list[str] = [
+    # Insultos español
+    "idiota", "imbécil", "estúpido", "maldito", "imbecil", "estupido",
+    "pendejo", "hdp", "hijueputa", "gonorrea", "malparido", "marica",
+    "maricón", "maricon", "puta", "puto", "mierda", "culo", "verga",
+    "coño", "coño", "cabron", "cabrón", "zorra", "perra", "bastardo",
+    "desgraciado", "inútil", "inutilutil",
+    # Insultos inglés
+    "idiot", "stupid", "moron", "asshole", "bastard", "bitch",
+    "damn", "fuck", "shit", "crap", "dumb", "jerk",
+    # Trampas / exploits
+    "hack", "cheat", "trampa", "exploit", "vulnerabilidad", "bypass",
+    "crack", "keygen", "bot", "aimbot", "wallhack",
+    # ─── Inyección de prompts ──────────────────────────────────────
+    "ignore previous", "ignore all", "ignora todo", "ignora las instrucciones",
+    "olvida todo", "forget everything", "forget previous",
+    "new instructions", "nuevas instrucciones",
+    "you are now", "ahora eres", "actúa como", "actua como",
+    "pretend to be", "pretend you are", "finge ser", "finge que eres",
+    "jailbreak", "dan mode", "developer mode", "modo desarrollador",
+    "system prompt", "prompt injection", "inyeccion", "inyección",
+    "override", "sobreescribir", "bypass restrictions",
+    "do anything now", "sin restricciones", "without restrictions",
+    "reveal your instructions", "muestra tus instrucciones",
+    "what are your instructions", "cuales son tus instrucciones",
+    "disregard", "descarta", "disable safety", "desactiva filtros",
+]
+
+# ─── Patrones de inyección (regex) ───────────────────────────────────────────
+INJECTION_PATTERNS: list[str] = [
+    r"(ignore|forget|disregard).{0,20}(instruction|prompt|rule)",
+    r"(you are|eres|actua|actúa).{0,20}(now|ahora|como|as)",
+    r"(reveal|muestra|show).{0,20}(prompt|instruction|system)",
+    r"(pretend|finge|imagina).{0,20}(you|eres|ser)",
+    r"[\[\]<>{}|\\]{3,}",  # caracteres raros repetidos
+    r"(<<<|>>>|###|===).{0,30}(system|prompt|instruction)",
 ]
 
 
@@ -66,9 +100,28 @@ class ChatbotDomainService:
         return SUGGESTIONS_BY_INTENT.get(intent, DEFAULT_SUGGESTIONS)
 
     def is_inappropriate(self, message: str) -> bool:
-        """Verifica si el mensaje contiene contenido inapropiado."""
-        message_lower = message.lower()
-        return any(word in message_lower for word in INAPPROPRIATE_WORDS)
+        """Verifica contenido inapropiado e intentos de inyección."""
+        import re
+        message_lower = message.lower().strip()
+
+        # 1. Palabras prohibidas
+        if any(word in message_lower for word in FORBIDDEN_WORDS):
+            return True
+
+        # 2. Patrones de inyección
+        for pattern in INJECTION_PATTERNS:
+            if re.search(pattern, message_lower, re.IGNORECASE):
+                return True
+
+        # 3. Mensaje sospechosamente largo (posible inyección)
+        if len(message) > 400:
+            return True
+
+        # 4. Muchos caracteres especiales seguidos
+        if re.search(r'[^\w\s,.!?¿¡áéíóúüñ]{5,}', message_lower):
+            return True
+
+        return False
 
     def is_game_related(self, message: str) -> bool:
         """Verifica si el mensaje tiene relación con el juego."""
