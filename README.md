@@ -1,73 +1,68 @@
-# The Nexus Battles V — Backend API
+# The Nexus Battles V — Proyecto Unificado
 
-Arquitectura Hexagonal (Puertos y Adaptadores)
+Merge de 4 ramas bajo Arquitectura Hexagonal (Puertos y Adaptadores).
 
-## Stack
-- Node.js 20 LTS + Express 5 + TypeScript
-- MySQL 8.0 + mysql2/promise
-- Zod (validacion) + JWT + bcrypt + helmet
-- Winston (logs) + PM2 (produccion)
+## Ramas integradas
+| Rama | Funcionalidades |
+|------|----------------|
+| branch 1 (main) | Auth, Players, Auctions, Missions (base), Payments, Cart, Products, Chatbot (Python) |
+| branch 2 | Frontend de Misiones con IA (MisionesPage, MissionCard, useMissions) |
+| branch 3 | Dependencias adicionales (package.json) |
+| branch 4 | Inventario de Ítems (Items, CRUD, búsqueda, paginación) + Calificaciones (Rating) + Auth extendido (User/apodo) |
 
-## Inicio Rapido
+## Puertos expuestos
+- **Backend (Node/TS):** `http://localhost:3001`
+- **Frontend (React/Vite):** `http://localhost:5173`
+- **Chatbot (Python/Flask):** `http://localhost:8000`
 
+## Inicio rápido
+
+### Backend
 ```bash
+cd backend
 cp .env.example .env
 # Rellenar .env con tus credenciales
+npm install
+mysql -u root -p < scripts/init-db.sql
+npm run dev
+```
+
+### Frontend
+```bash
+cd frontend
+cp .env.example .env
 npm install
 npm run dev
 ```
 
-## Base de Datos
+## Endpoints disponibles
 
-```bash
-mysql -u root -p < scripts/init-db.sql
+### API v1 (núcleo — branch 1)
+- `POST /api/v1/auth/login` | `/register`
+- `GET /api/v1/players` | `/auctions` | `/missions`
+- `POST /api/v1/payments/order`
+- `GET /api/v1/products` | `POST /api/v1/cart`
+
+### API v1 Inventario (branch 4)
+- `GET  /api/v1/inventory?tipo=&rareza=&page=`
+- `GET  /api/v1/inventory/search?q=`
+- `GET  /api/v1/inventory/:id`
+- `DELETE /api/v1/inventory/:id` [auth]
+
+### API v1 Calificaciones (branch 4)
+- `GET  /api/v1/products/:id/rating`
+- `POST /api/v1/products/:id/rate` [auth]
+
+### API v2 Auth extendido (branch 4)
+- `POST /api/v2/auth/register` (nombres, apellidos, apodo)
+- `POST /api/v2/auth/login`
+
+## Estructura Hexagonal
 ```
-
-## Scripts
-| Comando | Descripcion |
-|---------|-------------|
-| `npm run dev` | Desarrollo con hot-reload |
-| `npm run build` | Compilar TypeScript |
-| `npm start` | Produccion |
-| `npm run test:unit` | Tests unitarios con cobertura |
-| `npm run lint` | Linter |
-
-## Estructura
+backend/src/
+  domain/          # Entidades puras, repositorios (puertos), servicios
+  application/     # Casos de uso, puertos de salida, validadores
+  infrastructure/  # Adaptadores: DB, HTTP, seguridad, gateways
+  config/          # Variables de entorno validadas con Zod
+  payments/        # Módulo de pagos (domain segregado)
 ```
-
-src/
-  domain/          # Logica pura — sin dependencias externas
-  application/     # Casos de uso + puertos (contratos)
-  infrastructure/  # Adaptadores: DB, APIs, HTTP, seguridad
-  config/          # Variables de entorno validadas
-```
-
-## Regla de Oro
-El dominio NO importa mysql2, axios, express ni ninguna libreria de infraestructura.
-Todo acceso externo pasa por un Adaptador que implementa un Contrato (Puerto).
-
-
-Descripción
-Módulo de chatbot inteligente para THE NEXUS BATTLES V.
-Desarrollado con FastAPI (Python) + JavaScript + Groq AI.
-Disponible como widget flotante en todas las vistas del sistema.
-
-Stack tecnológico
-- **Backend:** Python 3.13, FastAPI, Uvicorn
-- **Frontend:** JavaScript, HTML, CSS
-- **IA:** Groq API (llama-3.3-70b-versatile)
-- **Contenedores:** Docker, Docker Compose
-
----
-
-## Instalación y ejecución.
-
-### Requisitos previos
-- [Python 3.13+](https://www.python.org/downloads/)
-- [Node.js](https://nodejs.org/)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop) *(opcional)*
-- [Git](https://git-scm.com/)
-
-
-
-

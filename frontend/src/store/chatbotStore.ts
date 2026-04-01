@@ -1,17 +1,11 @@
-/**
- * chatbotStore.ts — Estado Global del Chatbot
- * AISLADO del módulo de pagos. Comunicación con Shop: vía router.push() únicamente.
- *
- * Conecta con:
- *   - authStore → player.id como sessionId para persistir historial
- *   - playerStore → perfil del jugador para personalizar respuestas del bot
- *   - Python API (puerto 8000) → /api/v1/chatbot/sessions/:id/messages
- */
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+export type ChatRole = 'user' | 'assistant';
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: ChatRole;
   content: string;
   timestamp: Date;
   isError?: boolean;
@@ -21,127 +15,89 @@ interface ChatbotState {
   isOpen: boolean;
   isTyping: boolean;
   messages: ChatMessage[];
-  sessionId: string | null;
   unreadCount: number;
-  error: string | null;
-
-  open: () => void;
-  close: () => void;
   toggle: () => void;
+  clearHistory: () => void;
   sendMessage: (text: string) => Promise<void>;
-  clearHistory: () => Promise<void>;
-  setSession: (userId: string) => void;
-  markRead: () => void;
 }
 
-const CHATBOT_API = (import.meta.env.VITE_CHATBOT_API_URL ?? 'http://localhost:8000') + '/api/v1/chatbot';
-
-function makeId() {
-  return Math.random().toString(36).slice(2, 11);
+function nowId() {
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export const useChatbotStore = create<ChatbotState>((set, get) => ({
-  isOpen: false,
-  isTyping: false,
-  messages: [],
-  sessionId: null,
-  unreadCount: 0,
-  error: null,
+function oracleReply(input: string): string {
+  const t = input.toLowerCase();
+  if (t.includes('héroe') || t.includes('heroes')) return 'En el Nexus hay héroes de daño, tanque y soporte. Dime tu estilo y te recomiendo uno.';
+  if (t.includes('subasta')) return 'Las subastas son tiempo real: pujas, precio actual y cierre por tiempo. Vigila el reloj y administra tus monedas.';
+  if (t.includes('ítem') || t.includes('item')) return 'Los ítems se clasifican por rareza. Prioriza sinergias con tu rol y stats: ataque/defensa/magia.';
+  if (t.includes('misión') || t.includes('mision')) return 'Completa misiones para oro y XP. Empieza por dificultad EASY/MEDIUM y sube cuando tengas equipo.';
+  if (t.includes('tienda') || t.includes('shop')) return 'En la tienda puedes comprar paquetes/ítems. Si me dices tu objetivo (oro, progreso, cosmético), te guío.';
+  return 'Te escucho, aventurero. Pregúntame sobre héroes, subastas, ítems, misiones o la tienda.';
+}
 
-  open: () => set({ isOpen: true, unreadCount: 0 }),
-  close: () => set({ isOpen: false }),
-  toggle: () => {
-    const { isOpen } = get();
-    if (!isOpen) {
-      set({ isOpen: true, unreadCount: 0 });
-    } else {
-      set({ isOpen: false });
+export const useChatbotStore = create<ChatbotState>()(
+  persist(
+    (set, get) => ({
+      isOpen: false,
+      isTyping: false,
+      messages: [],
+      unreadCount: 0,
+
+      toggle: () =>
+        set((s) => ({
+          isOpen: !s.isOpen,
+          unreadCount: !s.isOpen ? 0 : s.unreadCount,
+        })),
+
+      clearHistory: () => set({ messages: [], unreadCount: 0, isTyping: false }),
+
+      sendMessage: async (text: string) => {
+        const userMsg: ChatMessage = {
+          id: nowId(),
+          role: 'user',
+          content: text,
+          timestamp: new Date(),
+        };
+
+        set((s) => ({
+          messages: [...s.messages, userMsg],
+          isTyping: true,
+        }));
+
+        // Respuesta local para que la UI funcione aunque el backend del bot no esté.
+        await new Promise((r) => setTimeout(r, 450));
+
+        const assistantMsg: ChatMessage = {
+          id: nowId(),
+          role: 'assistant',
+          content: oracleReply(text),
+          timestamp: new Date(),
+        };
+
+        const isOpen = get().isOpen;
+        set((s) => ({
+          messages: [...s.messages, assistantMsg],
+          isTyping: false,
+          unreadCount: isOpen ? 0 : s.unreadCount + 1,
+        }));
+      },
+    }),
+    {
+      name: 'chatbot-storage',
+      partialize: (s) => ({
+        isOpen: s.isOpen,
+        messages: s.messages,
+        unreadCount: s.unreadCount,
+      }),
+      // Date no se serializa bien; restauramos timestamps.
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        state.messages = (state.messages ?? []).map((m: any) => ({
+          ...m,
+          timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+        }));
+      },
     }
-  },
+  )
+);
 
-  markRead: () => set({ unreadCount: 0 }),
-
-  // Llamado desde App.tsx cuando el usuario hace login
-  setSession: (userId: string) => {
-    set({ sessionId: userId, messages: [] });
-  },
-
-  sendMessage: async (text: string) => {
-    const { sessionId, messages } = get();
-    if (!text.trim() || !sessionId) return;
-
-    const userMsg: ChatMessage = {
-      id: makeId(),
-      role: 'user',
-      content: text.trim(),
-      timestamp: new Date(),
-    };
-
-    set({
-      messages: [...messages, userMsg],
-      isTyping: true,
-      error: null,
-    });
-
-    try {
-      const res = await fetch(`${CHATBOT_API}/sessions/${sessionId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken') ?? ''}`,
-        },
-        body: JSON.stringify({ message: text.trim() }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const data = await res.json();
-      const botContent: string = data?.data?.reply ?? data?.reply ?? 'El oráculo guarda silencio...';
-
-      const botMsg: ChatMessage = {
-        id: makeId(),
-        role: 'assistant',
-        content: botContent,
-        timestamp: new Date(),
-      };
-
-      set((state) => ({
-        messages: [...state.messages, botMsg],
-        isTyping: false,
-        // Si el chat está cerrado, incrementar no-leídos
-        unreadCount: state.isOpen ? 0 : state.unreadCount + 1,
-      }));
-    } catch (err: any) {
-      const errMsg: ChatMessage = {
-        id: makeId(),
-        role: 'assistant',
-        content: 'El oráculo no puede responder en este momento. Intenta de nuevo.',
-        timestamp: new Date(),
-        isError: true,
-      };
-      set((state) => ({
-        messages: [...state.messages, errMsg],
-        isTyping: false,
-        error: err.message,
-      }));
-    }
-  },
-
-  clearHistory: async () => {
-    const { sessionId } = get();
-    if (!sessionId) return;
-
-    try {
-      await fetch(`${CHATBOT_API}/sessions/${sessionId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken') ?? ''}`,
-        },
-      });
-    } catch {
-      // ignorar error de red al limpiar
-    } finally {
-      set({ messages: [] });
-    }
-  },
-}));

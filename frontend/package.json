@@ -1,7 +1,7 @@
 {
   "name": "nexus-battles-frontend",
-  "version": "1.0.0",
-  "description": "The Nexus Battles V — Frontend React",
+  "version": "5.0.0",
+  "description": "The Nexus Battles V — Frontend React (Merged)",
   "type": "module",
   "scripts": {
     "dev": "vite",

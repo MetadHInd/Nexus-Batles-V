@@ -1,186 +1,182 @@
-/**
- * RegisterPage.tsx — Registro de nuevo aventurero
- */
-
-import { useState, FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/store/authStore';
+import { getErrorMessage } from '@/api/client';
 
 export default function RegisterPage() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm]   = useState('');
-  const [localErr, setLocalErr] = useState('');
-
-  const { register, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
+  const setAuth = useAuthStore(s => s.setAuth);
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
-    setLocalErr('');
-
-    if (password !== confirm) {
-      setLocalErr('Las contraseñas no coinciden');
-      return;
-    }
-    if (password.length < 6) {
-      setLocalErr('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
+    setError('');
+    setLoading(true);
 
     try {
-      await register(username.trim(), email.trim(), password);
+      await authApi.register(formData);
+      // Luego de registrar, redirigimos a login para obtener tokens.
       navigate('/login');
-    } catch {
-      // Error ya está en el store
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
     }
-  }
-
-  const displayError = localErr || error;
+  };
 
   return (
-    <div className="auth-page">
-      <div className="rune-bg" aria-hidden="true">
-        <span>⚔</span><span>⚜</span><span>🔮</span>
-        <span>⚡</span><span>✦</span><span>◈</span>
-      </div>
-
-      <div className="auth-card fade-in">
-        <div className="auth-card__crest">⚔</div>
-        <h1 className="auth-card__title">Forja tu Leyenda</h1>
-        <p className="auth-card__subtitle">Únete al campo de batalla del Nexus</p>
-
-        <div className="nbv-divider"><span className="nbv-divider-icon" style={{ fontSize: '0.7rem' }}>⚜</span></div>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--color-dungeon)',
+      padding: '2rem'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '500px',
+        padding: '2.5rem 2rem',
+        background: 'linear-gradient(145deg, var(--color-stone), var(--color-stone-dark))',
+        border: '1px solid var(--color-gold-dark)',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>⚜</div>
+        <h1 style={{
+          fontFamily: 'var(--font-title)',
+          fontSize: '1.3rem',
+          color: 'var(--color-gold)',
+          marginBottom: '0.3rem'
+        }}>
+          Forjar Tu Leyenda
+        </h1>
+        <p style={{
+          fontStyle: 'italic',
+          color: 'var(--color-parchment-dim)',
+          fontSize: '0.9rem',
+          marginBottom: '1.8rem'
+        }}>
+          Únete al Nexus, aventurero
+        </p>
 
         <form onSubmit={handleSubmit}>
-          <label className="auth-label">Nombre del Guerrero</label>
           <input
-            className="nbv-input"
             type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            placeholder="tu_nombre_épico"
+            value={formData.username}
+            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            placeholder="Username (3-20 caracteres)"
             required
             minLength={3}
             maxLength={20}
-            pattern="^[a-zA-Z0-9_]+$"
-            title="Solo letras, números y guión bajo"
-            autoComplete="username"
+            style={{
+              width: '100%',
+              padding: '0.7rem 1rem',
+              marginBottom: '0.6rem',
+              background: 'rgba(0,0,0,0.4)',
+              border: '1px solid rgba(200,134,10,0.25)',
+              color: 'var(--color-parchment)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '1rem'
+            }}
           />
 
-          <label className="auth-label">Correo del Reino</label>
           <input
-            className="nbv-input"
             type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="tu@nexus.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="Email"
             required
-            autoComplete="email"
+            style={{
+              width: '100%',
+              padding: '0.7rem 1rem',
+              marginBottom: '0.6rem',
+              background: 'rgba(0,0,0,0.4)',
+              border: '1px solid rgba(200,134,10,0.25)',
+              color: 'var(--color-parchment)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '1rem'
+            }}
           />
 
-          <label className="auth-label">Contraseña Secreta</label>
           <input
-            className="nbv-input"
             type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Mínimo 6 caracteres"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            placeholder="Contraseña (mínimo 8 caracteres)"
             required
-            minLength={6}
-            autoComplete="new-password"
+            minLength={8}
+            style={{
+              width: '100%',
+              padding: '0.7rem 1rem',
+              marginBottom: '0.6rem',
+              background: 'rgba(0,0,0,0.4)',
+              border: '1px solid rgba(200,134,10,0.25)',
+              color: 'var(--color-parchment)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '1rem'
+            }}
           />
 
-          <label className="auth-label">Confirmar Contraseña</label>
-          <input
-            className={`nbv-input${displayError ? ' error' : ''}`}
-            type="password"
-            value={confirm}
-            onChange={e => setConfirm(e.target.value)}
-            placeholder="Repite la contraseña"
-            required
-            autoComplete="new-password"
-          />
-
-          {displayError && (
-            <div className="nbv-notif nbv-notif-error" style={{ marginBottom: '1rem' }}>
-              <span className="nbv-notif-icon">⚠</span>
-              <div>
-                <div className="nbv-notif-title">Error de Registro</div>
-                <div className="nbv-notif-msg">{displayError}</div>
-              </div>
+          {error && (
+            <div style={{
+              padding: '0.5rem',
+              marginBottom: '0.6rem',
+              background: 'rgba(168,16,32,0.1)',
+              border: '1px solid var(--color-crimson)',
+              color: 'var(--color-crimson-bright)',
+              fontSize: '0.85rem'
+            }}>
+              {error}
             </div>
           )}
 
           <button
             type="submit"
-            className="nbv-btn nbv-btn-primary"
-            style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem', clipPath: 'none' }}
-            disabled={isLoading}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '0.7rem 1.5rem',
+              marginTop: '0.5rem',
+              fontFamily: 'var(--font-heading)',
+              fontSize: '0.75rem',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              background: 'linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-bright))',
+              color: 'var(--color-abyss)',
+              border: 'none',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1
+            }}
           >
-            {isLoading ? '⚜ Creando leyenda...' : '✦ Unirme al Nexus'}
+            {loading ? 'Creando...' : '⚔ Crear Cuenta'}
           </button>
         </form>
 
-        <div className="auth-card__footer">
+        <div style={{
+          marginTop: '1rem',
+          fontSize: '0.8rem',
+          color: 'var(--color-rune-gray)',
+          fontStyle: 'italic'
+        }}>
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login">Entra al campo de batalla</Link>
+          <Link
+            to="/login"
+            style={{
+              color: 'var(--color-gold)',
+              textDecoration: 'none'
+            }}
+          >
+            Inicia sesión
+          </Link>
         </div>
       </div>
-
-      <style>{`
-        .auth-page {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(74,21,128,0.06) 0%, transparent 70%), var(--abyss);
-          padding: 1rem;
-          position: relative;
-        }
-        .auth-card {
-          width: 100%;
-          max-width: 420px;
-          background: linear-gradient(145deg, var(--stone), var(--stone-dark));
-          border: 1px solid rgba(200,134,10,0.3);
-          padding: 2.5rem 2rem;
-          position: relative;
-          z-index: 1;
-          box-shadow: 0 0 60px rgba(0,0,0,0.8);
-        }
-        .auth-card::after {
-          content: '';
-          position: absolute;
-          bottom: 0; right: 0;
-          width: 30px; height: 30px;
-          border-right: 1px solid var(--gold-dark);
-          border-bottom: 1px solid var(--gold-dark);
-        }
-        .auth-card__crest {
-          text-align: center; font-size: 2.5rem; color: var(--gold);
-          filter: drop-shadow(0 0 16px rgba(200,134,10,0.6)); margin-bottom: 0.5rem;
-        }
-        .auth-card__title {
-          font-family: var(--font-title); font-size: 1.6rem; text-align: center;
-          color: var(--gold); filter: drop-shadow(0 0 12px rgba(200,134,10,0.4)); margin-bottom: 0.3rem;
-        }
-        .auth-card__subtitle {
-          text-align: center; font-style: italic; font-size: 0.9rem;
-          color: var(--parchment-dim); margin-bottom: 0;
-        }
-        .auth-label {
-          display: block; font-family: var(--font-heading); font-size: 0.68rem;
-          letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.35rem;
-        }
-        .auth-card__footer {
-          text-align: center; margin-top: 1.2rem;
-          font-size: 0.85rem; color: var(--rune-gray); font-style: italic;
-        }
-        .auth-card__footer a { color: var(--gold); }
-        .auth-card__footer a:hover { color: var(--gold-light); }
-      `}</style>
     </div>
   );
 }
