@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 
 // Layout
 import Navbar from '@/components/Navbar';
+import { ChatbotBubble } from '@/components/chatbot/ChatbotBubble';
 
 // Pages
 import LoginPage from '@/pages/LoginPage';
@@ -43,6 +44,8 @@ export default function App() {
       <div className="rune-bg">
         <span>⚔</span><span>🐉</span><span>✦</span><span>⚜</span><span>🗡</span><span>🛡</span>
       </div>
+
+      <ChatbotBubble />
 
       <Routes>
         {/* Rutas públicas — sin Navbar */}

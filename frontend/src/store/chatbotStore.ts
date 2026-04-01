@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { chatbotFetch } from '@/api/client';
 
 export type ChatRole = 'user' | 'assistant';
 
@@ -25,8 +26,27 @@ function nowId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function getChatbotUserId(): string {
+  const stored = localStorage.getItem('nexusbot-user-id');
+  if (stored) return stored;
+  const newId = `guest-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  localStorage.setItem('nexusbot-user-id', newId);
+  return newId;
+}
+
 function oracleReply(input: string): string {
   const t = input.toLowerCase();
+  const isEnglish = /\b(hi|hello|hey|how are you|i am|i'm|english|please)\b/.test(t);
+
+  if (isEnglish) {
+    if (t.includes('hero') || t.includes('heroes')) return 'In Nexus there are damage, tank and support heroes. Tell me your preferred playstyle and I will recommend one.';
+    if (t.includes('auction')) return 'Auctions are real-time: bids, current price and time limit. Watch the clock and manage your gold.';
+    if (t.includes('item') || t.includes('gear')) return 'Items are ranked by rarity. Prioritize synergies with your role and stats: attack/defense/magic.';
+    if (t.includes('mission') || t.includes('quest')) return 'Complete missions for gold and XP. Start with EASY/MEDIUM difficulty and level up your gear.';
+    if (t.includes('shop') || t.includes('store')) return 'In the shop you can buy packs and items. Tell me your goal (gold, progression, cosmetics) and I will guide you.';
+    return 'I hear you, adventurer. Ask me about heroes, auctions, items, missions, or the shop.';
+  }
+
   if (t.includes('héroe') || t.includes('heroes')) return 'En el Nexus hay héroes de daño, tanque y soporte. Dime tu estilo y te recomiendo uno.';
   if (t.includes('subasta')) return 'Las subastas son tiempo real: pujas, precio actual y cierre por tiempo. Vigila el reloj y administra tus monedas.';
   if (t.includes('ítem') || t.includes('item')) return 'Los ítems se clasifican por rareza. Prioriza sinergias con tu rol y stats: ataque/defensa/magia.';
@@ -64,13 +84,29 @@ export const useChatbotStore = create<ChatbotState>()(
           isTyping: true,
         }));
 
-        // Respuesta local para que la UI funcione aunque el backend del bot no esté.
-        await new Promise((r) => setTimeout(r, 450));
+        let assistantText = oracleReply(text);
+        const userId = getChatbotUserId();
+
+        try {
+          const response = await chatbotFetch('/chatbot/message', {
+            method: 'POST',
+            body: JSON.stringify({ user_id: userId, message: text }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (typeof data.response === 'string' && data.response.trim().length > 0) {
+              assistantText = data.response;
+            }
+          }
+        } catch {
+          // Si el backend no responde, usamos la respuesta local de emergencia.
+        }
 
         const assistantMsg: ChatMessage = {
           id: nowId(),
           role: 'assistant',
-          content: oracleReply(text),
+          content: assistantText,
           timestamp: new Date(),
         };
 
