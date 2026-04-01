@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     rate_limit_max: int = Field(default=10, alias="RATE_LIMIT_MAX")
     rate_limit_window: int = Field(default=60, alias="RATE_LIMIT_WINDOW")
 
-    model_config = {"env_file": ".env", "populate_by_name": True}
+    model_config = {"env_file": ".env", "populate_by_name": True, "extra": "ignore"}
 
 
 def get_settings() -> Settings:

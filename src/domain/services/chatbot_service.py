@@ -1,61 +1,151 @@
-"""
-DOMINIO — Servicio de lógica pura del chatbot
-Reglas de negocio sin DB, sin HTTP, sin frameworks.
-"""
-from src.domain.entities.hero import Hero
-from src.domain.entities.item import Item
+# ─── Servicio de dominio — Lógica pura sin dependencias externas ──────────────
+import re
+import unicodedata
+from src.domain.entities.chat_message import ChatIntent
 
 
-# ─── Intenciones del chatbot ──────────────────────────────────────────────────
+# ─── Palabras clave por intención (ampliadas) ─────────────────────────────────
 INTENT_KEYWORDS: dict[str, list[str]] = {
-    "hero_query":    ["héroe", "hero", "guerrero", "mago", "pícaro", "sanador", "tanque",
-                      "warrior", "mage", "rogue", "healer", "tank", "personaje", "character"],
-    "hero_stats":    ["estadísticas", "stats", "poder", "vida", "hp", "ataque", "attack",
-                      "defensa", "defense", "velocidad", "speed", "maná", "mana"],
-    "item_query":    ["arma", "weapon", "armadura", "armor", "ítem", "item", "equipo",
-                      "equipment", "accesorio", "accessory", "consumible"],
-    "item_compat":   ["compatible", "sirve para", "puedo usar", "qué arma", "qué armadura"],
-    "item_price":    ["precio", "price", "cuánto cuesta", "vale", "cost", "comprar", "buy"],
-    "rarity_query":  ["legendario", "legendary", "épico", "epic", "raro", "rare", "común", "common"],
-    "how_to_play":   ["cómo se juega", "combate", "turno", "mecánica", "reglas", "empezar"],
-    "greeting":      ["hola", "hello", "hi", "buenos días", "buenas", "hey", "saludos"],
-    "farewell":      ["adiós", "bye", "chao", "hasta luego", "gracias", "thank"],
-    "help":          ["ayuda", "help", "qué puedes hacer", "opciones", "menú"],
+    ChatIntent.GREETING.value: [
+        "hola", "buenos", "buenas", "hey", "saludos", "necesito ayuda",
+        "ayuda", "qué tal", "que tal", "buen día", "buen dia",
+        "buenas tardes", "buenas noches"
+    ],
+    ChatIntent.HERO_STATS.value: [
+        "stats", "estadisticas", "estadísticas", "stat", "valor",
+        "atributo", "estadística", "attributes", "statísticas"
+    ],
+    ChatIntent.HEROES.value: [
+        "héroe", "heroe", "heroes", "héroes", "guerrero", "mago", "picaro",
+        "pícaro", "sanador", "tanque", "tank", "poder", "vida", "defensa",
+        "ataque", "daño", "dano", "personaje", "clase", "raza", "habilidad",
+        "skill", "nivel", "level", "rango", "rank", "fuerza", "agilidad",
+        "inteligencia", "hp", "mp", "character", "champion", "campeon",
+        "campeón"
+    ],
+    ChatIntent.ITEMS.value: [
+        "arma", "armas", "armadura", "armaduras", "item", "ítem", "items",
+        "ítems", "carta", "cartas", "mazo", "mazos", "equipo", "equipar",
+        "espada", "escudo", "casco", "bota", "guante", "anillo", "amuleto",
+        "pocion", "poción", "objeto", "loot", "drop", "craftear", "craft",
+        "mejorar", "upgrade", "weapon", "armor", "gear", "accesorio"
+    ],
+    ChatIntent.MECANICAS.value: [
+        "combate", "turno", "turnos", "mision", "misión", "misiones",
+        "regla", "reglas", "modalidad", "jugar", "como se juega",
+        "cómo se juega", "battle", "batalla", "duelo", "pvp", "pve",
+        "torneo", "arena", "raid", "quest", "objetivo", "ganar", "perder",
+        "puntos", "experiencia", "xp", "oro", "gold", "moneda", "recompensa",
+        "reward", "sistema", "mecánica", "mecanica", "funcionamiento",
+        "como funciona", "cómo funciona", "explicar", "explicame", "cuéntame"
+    ],
+    ChatIntent.CUENTA.value: [
+        "registro", "registrar", "cuenta", "contraseña", "contrasena",
+        "password", "perfil", "profile", "login", "acceso", "entrar",
+        "usuario", "username", "email", "correo", "verificar", "verificacion",
+        "verificación", "recuperar", "olvidé", "olvide", "cambiar",
+        "actualizar", "editar", "nombre", "avatar", "foto"
+    ],
+    ChatIntent.SUBASTA.value: [
+        "subasta", "subastas", "comprar", "vender", "comercio", "precio",
+        "precios", "mercado", "market", "oferta", "puja", "pujar", "bid",
+        "auction", "intercambio", "trade", "intercambiar", "venta", "compra",
+        "tienda", "shop", "store", "inventario", "inventory"
+    ],
+    ChatIntent.SOPORTE.value: [
+        "error", "problema", "bug", "falla", "fallo", "no funciona",
+        "ayuda tecnica", "ayuda técnica", "soporte", "support", "reportar",
+        "reporte", "crash", "no carga", "no abre", "lento", "lag",
+        "contacto", "contactar", "humano", "agente", "ticket"
+    ],
+    ChatIntent.FAQ.value: [
+        "qué es", "que es", "para qué", "para que", "qué son", "que son",
+        "gratis", "free", "pago", "cuesta", "precio del juego", "descargar",
+        "download", "instalar", "install", "requisitos", "plataforma",
+        "disponible", "cuando", "cuándo", "lanzamiento", "nuevo"
+    ],
 }
 
-SUGGESTIONS_BY_INTENT: dict[str, list[str]] = {
-    "hero_query":   ["¿Cuáles son los tipos de héroes?", "¿Qué estadísticas tiene el Guerrero?", "¿Cuál es el héroe más poderoso?"],
-    "hero_stats":   ["¿Qué héroe tiene más ataque?", "¿Cuál tiene más defensa?", "¿Cómo se calculan los stats?"],
-    "item_query":   ["¿Qué armas están disponibles?", "¿Cómo funcionan las armaduras?", "¿Qué ítems legendarios existen?"],
-    "item_compat":  ["¿Qué arma usa el Mago?", "¿Qué armadura sirve para el Tanque?", "¿El Pícaro puede usar escudos?"],
-    "item_price":   ["¿Cuánto cuesta la Espada Élfica?", "¿Cuál es el ítem más barato?", "¿Cómo consigo monedas?"],
-    "rarity_query": ["¿Cómo obtengo ítems legendarios?", "¿Qué diferencia hay entre rarezas?", "¿Los legendarios se pueden vender?"],
-    "how_to_play":  ["¿Cómo funciona el combate?", "¿Cuántos héroes puedo tener?", "¿Cómo subo de nivel?"],
-    "greeting":     ["¿Qué puedes hacer?", "¿Cómo funciona el juego?", "¿Cuáles son los héroes?"],
-    "help":         ["Ver todos los héroes", "Ver todos los ítems", "¿Cómo se juega?"],
+# ─── Correcciones ortográficas comunes ────────────────────────────────────────
+TYPO_CORRECTIONS: dict[str, str] = {
+    "eroe": "heroe",
+    "ermadura": "armadura",
+    "armdura": "armadura",
+    "comabte": "combate",
+    "combte": "combate",
+    "mision": "misión",
+    "subcasta": "subasta",
+    "subastaa": "subasta",
+    "contraseña": "contraseña",
+    "contrasena": "contraseña",
+    "erorr": "error",
+    "prob": "problema",
+    "ayda": "ayuda",
+    "juegoo": "juego",
+    "personje": "personaje",
+    "habiliad": "habilidad",
 }
 
-DEFAULT_SUGGESTIONS = [
-    "¿Cuáles son los héroes disponibles?",
-    "¿Qué ítems puedo equipar?",
-    "¿Cómo funciona el combate?",
-]
+# ─── Sugerencias por intención ────────────────────────────────────────────────
+INTENT_SUGGESTIONS: dict[str, list[str]] = {
+    ChatIntent.HEROES.value: [
+        "¿Cuáles son los tipos de héroes?",
+        "¿Qué estadísticas tiene el Guerrero?",
+        "¿Cómo funciona el poder de los héroes?",
+    ],
+    ChatIntent.ITEMS.value: [
+        "¿Qué armas están disponibles?",
+        "¿Cómo funcionan las armaduras?",
+        "¿Qué son las habilidades épicas?",
+    ],
+    ChatIntent.MECANICAS.value: [
+        "¿Cómo funciona el sistema de combate?",
+        "¿Qué son las misiones?",
+        "¿Cuáles son las modalidades de juego?",
+    ],
+    ChatIntent.HERO_STATS.value: [
+        "¿Qué estadísticas tiene el Guerrero?",
+        "¿Cómo se comparan los héroes?",
+        "¿Qué habilidades especiales tiene el héroe?",
+    ],
+    ChatIntent.GREETING.value: [
+        "Hola, necesito ayuda.",
+        "¿Qué puedes hacer?",
+        "¡Hola!",
+    ],
+    ChatIntent.CUENTA.value: [
+        "¿Cómo me registro?",
+        "¿Cómo recupero mi contraseña?",
+        "¿Cómo edito mi perfil?",
+    ],
+    ChatIntent.SUBASTA.value: [
+        "¿Cómo funciona la subasta?",
+        "¿Cómo vendo un ítem?",
+        "¿Cómo compro en el mercado?",
+    ],
+    ChatIntent.SOPORTE.value: [
+        "¿Cuáles son los requisitos del sistema?",
+        "¿Cómo reporto un error?",
+        "¿Cómo contacto soporte humano?",
+    ],
+    ChatIntent.FAQ.value: [
+        "¿Qué es Nexus Battles V?",
+        "¿Cómo empiezo a jugar?",
+        "¿Es gratis el juego?",
+    ],
+}
 
 # ─── Palabras prohibidas ──────────────────────────────────────────────────────
 FORBIDDEN_WORDS: list[str] = [
-    # Insultos español
     "idiota", "imbécil", "estúpido", "maldito", "imbecil", "estupido",
     "pendejo", "hdp", "hijueputa", "gonorrea", "malparido", "marica",
     "maricón", "maricon", "puta", "puto", "mierda", "culo", "verga",
-    "coño", "coño", "cabron", "cabrón", "zorra", "perra", "bastardo",
+    "coño", "cabron", "cabrón", "zorra", "perra", "bastardo",
     "desgraciado", "inútil", "inutilutil",
-    # Insultos inglés
     "idiot", "stupid", "moron", "asshole", "bastard", "bitch",
     "damn", "fuck", "shit", "crap", "dumb", "jerk",
-    # Trampas / exploits
     "hack", "cheat", "trampa", "exploit", "vulnerabilidad", "bypass",
-    "crack", "keygen", "bot", "aimbot", "wallhack",
-    # ─── Inyección de prompts ──────────────────────────────────────
+    "crack", "keygen", "aimbot", "wallhack",
     "ignore previous", "ignore all", "ignora todo", "ignora las instrucciones",
     "olvida todo", "forget everything", "forget previous",
     "new instructions", "nuevas instrucciones",
@@ -66,42 +156,87 @@ FORBIDDEN_WORDS: list[str] = [
     "override", "sobreescribir", "bypass restrictions",
     "do anything now", "sin restricciones", "without restrictions",
     "reveal your instructions", "muestra tus instrucciones",
-    "what are your instructions", "cuales son tus instrucciones",
     "disregard", "descarta", "disable safety", "desactiva filtros",
 ]
 
-# ─── Patrones de inyección (regex) ───────────────────────────────────────────
+# ─── Patrones de inyección ────────────────────────────────────────────────────
 INJECTION_PATTERNS: list[str] = [
     r"(ignore|forget|disregard).{0,20}(instruction|prompt|rule)",
     r"(you are|eres|actua|actúa).{0,20}(now|ahora|como|as)",
     r"(reveal|muestra|show).{0,20}(prompt|instruction|system)",
     r"(pretend|finge|imagina).{0,20}(you|eres|ser)",
-    r"[\[\]<>{}|\\]{3,}",  # caracteres raros repetidos
+    r"[\[\]<>{}|\\]{3,}",
     r"(<<<|>>>|###|===).{0,30}(system|prompt|instruction)",
+]
+
+# ─── Sugerencias por defecto ──────────────────────────────────────────────────
+DEFAULT_SUGGESTIONS: list[str] = [
+    "¿Cómo funciona el combate?",
+    "¿Cuáles son los héroes disponibles?",
+    "¿Necesitas ayuda con tu cuenta?",
 ]
 
 
 class ChatbotDomainService:
     """
     Servicio de dominio puro.
-    Contiene reglas de negocio del chatbot sin dependencias externas.
+    Contiene toda la lógica de negocio del chatbot.
+    CERO dependencias externas.
     """
 
-    def detect_intent(self, message: str) -> str:
-        """Detecta la intención del mensaje del usuario."""
-        message_lower = message.lower()
-        for intent, keywords in INTENT_KEYWORDS.items():
-            if any(kw in message_lower for kw in keywords):
-                return intent
-        return "general"
+    def _normalize(self, text: str) -> str:
+        """Normaliza texto: minúsculas, sin acentos, correcciones ortográficas."""
+        text = text.lower().strip()
 
-    def get_suggestions(self, intent: str) -> list[str]:
-        """Retorna sugerencias según la intención detectada."""
-        return SUGGESTIONS_BY_INTENT.get(intent, DEFAULT_SUGGESTIONS)
+        # Descomponer acentos y eliminar marcas diacríticas
+        text = unicodedata.normalize("NFKD", text)
+        text = "".join(
+            ch for ch in text
+            if unicodedata.category(ch) != "Mn"
+        )
+
+        # Convertir a ASCII para eliminar símbolos no deseados y caracteres corruptos
+        text = text.encode("ascii", "ignore").decode("ascii")
+
+        # Corregir errores ortográficos comunes en palabras completas
+        for typo, correction in TYPO_CORRECTIONS.items():
+            text = re.sub(r"\b" + re.escape(typo) + r"\b", correction, text)
+
+        return text
+
+    def _keyword_in_text(self, keyword: str, text: str) -> bool:
+        """Busca una palabra clave como término completo para evitar coincidencias parciales."""
+        return bool(re.search(r"\b" + re.escape(keyword) + r"\b", text))
+
+    def detect_intent(self, message: str) -> str:
+        """
+        Detecta la intención del mensaje con soporte de:
+        - Keywords ampliadas
+        - Normalización de acentos
+        - Corrección ortográfica básica
+        - Detección de intenciones múltiples (prioriza la más específica)
+        """
+        normalized = self._normalize(message)
+        scores: dict[str, int] = {}
+
+        for intent, keywords in INTENT_KEYWORDS.items():
+            score = sum(1 for kw in keywords if self._keyword_in_text(kw, normalized))
+            if score > 0:
+                scores[intent] = score
+
+        if not scores:
+            return ChatIntent.GENERAL.value
+
+        if scores.get(ChatIntent.GREETING.value):
+            return ChatIntent.GREETING.value
+
+        if scores.get(ChatIntent.HERO_STATS.value) and scores.get(ChatIntent.HEROES.value):
+            return ChatIntent.HERO_STATS.value
+
+        return max(scores, key=lambda k: scores[k])
 
     def is_inappropriate(self, message: str) -> bool:
         """Verifica contenido inapropiado e intentos de inyección."""
-        import re
         message_lower = message.lower().strip()
 
         # 1. Palabras prohibidas
@@ -113,7 +248,7 @@ class ChatbotDomainService:
             if re.search(pattern, message_lower, re.IGNORECASE):
                 return True
 
-        # 3. Mensaje sospechosamente largo (posible inyección)
+        # 3. Mensaje sospechosamente largo
         if len(message) > 400:
             return True
 
@@ -123,36 +258,43 @@ class ChatbotDomainService:
 
         return False
 
-    def is_game_related(self, message: str) -> bool:
-        """Verifica si el mensaje tiene relación con el juego."""
-        message_lower = message.lower()
-        all_keywords = [kw for keywords in INTENT_KEYWORDS.values() for kw in keywords]
-        return any(kw in message_lower for kw in all_keywords)
-
-    def format_hero_for_chat(self, hero: Hero) -> str:
-        """Formatea un héroe para presentarlo en el chat."""
-        stars = {"common": "⭐", "rare": "⭐⭐", "epic": "⭐⭐⭐", "legendary": "⭐⭐⭐⭐"}
-        rarity_star = stars.get(hero.rarity, "⭐")
-        return (
-            f"**{hero.name}** {rarity_star}\n"
-            f"Tipo: {hero.hero_type.capitalize()} | Rareza: {hero.rarity.capitalize()}\n"
-            f"📊 HP: {hero.stats.hp} | ATK: {hero.stats.attack} | DEF: {hero.stats.defense} | SPD: {hero.stats.speed}\n"
-            f"⚡ Poder especial: {hero.special_power}\n"
-            f"🏆 Rating de poder: {hero.get_power_rating()}"
-        )
-
-    def format_item_for_chat(self, item: Item) -> str:
-        """Formatea un ítem para presentarlo en el chat."""
-        stars = {"common": "⭐", "rare": "⭐⭐", "epic": "⭐⭐⭐", "legendary": "⭐⭐⭐⭐"}
-        rarity_star = stars.get(item.rarity, "⭐")
-        compatible = ", ".join(item.compatible_heroes) if item.compatible_heroes != ["all"] else "Todos"
-        return (
-            f"**{item.name}** {rarity_star}\n"
-            f"Tipo: {item.item_type.capitalize()} | Rareza: {item.rarity.capitalize()}\n"
-            f"📊 Bonos: ATK+{item.stats.attack_bonus} DEF+{item.stats.defense_bonus} HP+{item.stats.hp_bonus}\n"
-            f"🧙 Compatible con: {compatible}\n"
-            f"💰 Precio: {item.price} monedas"
-        )
+    def get_suggestions(self, intent: str) -> list[str]:
+        """Retorna sugerencias según la intención detectada."""
+        return INTENT_SUGGESTIONS.get(intent, DEFAULT_SUGGESTIONS)
 
     def validate_message_length(self, message: str) -> bool:
-        return 1 <= len(message.strip()) <= 500
+        """Valida que el mensaje tenga una longitud aceptable."""
+        text = message.strip()
+        return 1 <= len(text) <= 500
+
+    def format_hero_for_chat(self, hero) -> str:
+        """Formatea la información de un héroe para mostrarla en el chat."""
+        stats = hero.stats
+        return (
+            f"{hero.name} ({hero.hero_type}, {hero.rarity})\n"
+            f"HP: {stats.hp} | Ataque: {stats.attack} | Defensa: {stats.defense} | "
+            f"Velocidad: {stats.speed} | Mana: {stats.mana}\n"
+            f"Habilidad especial: {hero.special_power}\n"
+            f"Descripción: {hero.lore}"
+        )
+
+    def format_item_for_chat(self, item) -> str:
+        """Formatea la información de un ítem para mostrarla en el chat."""
+        stats = item.stats
+        return (
+            f"{item.name} ({item.item_type}, {item.rarity})\n"
+            f"Bonos: Ataque {stats.attack_bonus}, Defensa {stats.defense_bonus}, "
+            f"Velocidad {stats.speed_bonus}, Vida {stats.hp_bonus}, Mana {stats.mana_bonus}\n"
+            f"Compatible con: {', '.join(item.compatible_heroes)}\n"
+            f"Precio: {item.price}\n"
+            f"Descripción: {item.description}"
+        )
+
+    def build_groq_history(self, history: list[dict]) -> list[dict]:
+        """Construye el historial en formato Groq."""
+        return [
+            {"role": msg["role"], "content": msg["content"]}
+            for msg in history[:-1]
+            if msg["role"] in ("user", "assistant")
+        ]
+    

@@ -1,0 +1,173 @@
+{
+  "arma": [
+    {
+      "id": "W001",
+      "name": "Espada de una mano",
+      "hero_type": "Guerrero Tanque",
+      "set": "SET 1",
+      "effects": {
+        "attack_bonus": 1,
+        "critical_chance_bonus": 1
+      },
+      "description": "Espada ligera que mejora la precisión del Guerrero Tanque con un pequeño porcentaje de golpe crítico."
+    },
+    {
+      "id": "W002",
+      "name": "Espada de dos manos",
+      "hero_type": "Guerrero Armas",
+      "set": "SET 1",
+      "effects": {
+        "attack_bonus": 1,
+        "critical_chance_bonus": 3
+      },
+      "description": "Espada de gran tamaño que maximiza el potencial crítico del Guerrero Armas."
+    },
+    {
+      "id": "W003",
+      "name": "Escudo de dragón",
+      "hero_type": "Guerrero Tanque",
+      "set": "SET 2",
+      "effects": {
+        "defense_bonus": 1
+      },
+      "description": "Escudo forjado con escamas de dragón que refuerza la defensa del Guerrero Tanque."
+    },
+    {
+      "id": "W004",
+      "name": "Piedra de afilar",
+      "hero_type": "Guerrero Armas",
+      "set": "SET 2",
+      "effects": {
+        "damage_bonus": 2
+      },
+      "description": "Herramienta que afila las armas del Guerrero Armas aumentando significativamente el daño infligido."
+    },
+    {
+      "id": "W005",
+      "name": "Orbe de manos ardientes",
+      "hero_type": "Mago Fuego",
+      "set": "SET 1",
+      "effects": {
+        "damage_bonus": 1,
+        "critical_chance_bonus": 3
+      },
+      "description": "Orbe mágico que potencia los hechizos de fuego aumentando daño y probabilidad de golpe crítico."
+    },
+    {
+      "id": "W006",
+      "name": "Báculo de Permafrost",
+      "hero_type": "Mago Hielo",
+      "set": "SET 1",
+      "effects": {
+        "opponent_damage_reduction": 1,
+        "opponent_critical_chance_reduction": 2
+      },
+      "description": "Báculo helado que debilita los ataques del oponente reduciendo su daño y probabilidad de crítico."
+    },
+    {
+      "id": "W007",
+      "name": "Fuego fatuo",
+      "hero_type": "Mago Fuego",
+      "set": "SET 2",
+      "effects": {
+        "attack_bonus": 1
+      },
+      "description": "Llama mágica errante que mejora la precisión de los ataques del Mago Fuego."
+    },
+    {
+      "id": "W008",
+      "name": "Venas heladas",
+      "hero_type": "Mago Hielo",
+      "set": "SET 2",
+      "effects": {
+        "damage_bonus": 1
+      },
+      "description": "Canalización de energía gélida que incrementa el daño de los ataques del Mago Hielo."
+    },
+    {
+      "id": "W009",
+      "name": "Daga purulenta",
+      "hero_type": "Pícaro Veneno",
+      "set": "SET 1",
+      "effects": {
+        "damage_bonus_per_turn": 1,
+        "damage_bonus_turns": 2,
+        "critical_chance_bonus": 3
+      },
+      "description": "Daga impregnada de veneno que causa daño continuo durante 2 turnos y aumenta el crítico."
+    },
+    {
+      "id": "W010",
+      "name": "Machete vendito",
+      "hero_type": "Pícaro Machete",
+      "set": "SET 1",
+      "effects": {
+        "damage_bonus": 2,
+        "critical_chance_bonus": 2
+      },
+      "description": "Machete bendecido que potencia el daño y la probabilidad de golpe crítico del Pícaro Machete."
+    },
+    {
+      "id": "W011",
+      "name": "Visión borrosa",
+      "hero_type": "Pícaro Veneno",
+      "set": "SET 2",
+      "effects": {
+        "opponent_attack_reduction": 1
+      },
+      "description": "Toxina que nubla la visión del oponente reduciendo su capacidad de ataque en 1 punto."
+    },
+    {
+      "id": "W012",
+      "name": "Cierra sangrienta",
+      "hero_type": "Pícaro Machete",
+      "set": "SET 2",
+      "effects": {
+        "damage_bonus_per_turn": 2,
+        "damage_bonus_turns": 2
+      },
+      "description": "Sierra dentada que provoca heridas sangrantes causando daño extra durante 2 turnos."
+    },
+    {
+      "id": "W013",
+      "name": "Raíz china",
+      "hero_type": "Chamán",
+      "set": "SET 1",
+      "effects": {
+        "heal_bonus_dice": "2d4"
+      },
+      "description": "Raíz medicinal ancestral que potencia la sanación del Chamán con un bono adicional de 2d4."
+    },
+    {
+      "id": "W014",
+      "name": "Kit de urgencias",
+      "hero_type": "Médico",
+      "set": "SET 1",
+      "effects": {
+        "heal_bonus_dice": "2d6"
+      },
+      "description": "Equipo médico de emergencia que incrementa la capacidad de sanación del Médico con 2d6 adicionales."
+    },
+    {
+      "id": "W015",
+      "name": "Yerbabuena",
+      "hero_type": "Chamán",
+      "set": "SET 2",
+      "effects": {
+        "heal_bonus": 2,
+        "heal_bonus_turns": 2
+      },
+      "description": "Planta curativa que proporciona sanación sostenida de +2 durante 2 turnos al Chamán."
+    },
+    {
+      "id": "W016",
+      "name": "Reanimador",
+      "hero_type": "Médico",
+      "set": "SET 2",
+      "effects": {
+        "heal_bonus_dice": "4d6"
+      },
+      "description": "Dispositivo médico avanzado que permite al Médico restaurar grandes cantidades de vida con 4d6."
+    }
+  ]
+}

@@ -14,6 +14,7 @@ from config.settings import settings
 from src.infrastructure.repositories.knowledge_repositories import (
     InMemoryHeroRepository,
     InMemoryItemRepository,
+    InMemoryKnowledgeRepository,
 )
 from src.infrastructure.repositories.session_repository import InMemoryChatSessionRepository
 from src.infrastructure.gateways.groq_gateway import GroqAIGateway
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
     # Repositorios (adaptadores)
     hero_repo = InMemoryHeroRepository()
     item_repo = InMemoryItemRepository()
+    knowledge_repo = InMemoryKnowledgeRepository()
     session_repo = InMemoryChatSessionRepository()
 
     # Gateway de IA (adaptador)
@@ -77,6 +79,7 @@ def create_app() -> FastAPI:
     send_message_uc = SendMessageUseCase(
         hero_repo=hero_repo,
         item_repo=item_repo,
+        knowledge_repo=knowledge_repo,
         session_repo=session_repo,
         ai_gateway=ai_gateway,
         domain_service=domain_service,

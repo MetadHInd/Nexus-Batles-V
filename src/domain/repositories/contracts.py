@@ -59,6 +59,14 @@ class ItemRepositoryPort(ABC):
         pass
 
 
+class KnowledgeRepositoryPort(ABC):
+    """Contrato para acceso al conocimiento estático del juego."""
+
+    @abstractmethod
+    def load(self) -> dict:
+        pass
+
+
 class ChatSessionRepositoryPort(ABC):
     """Contrato para persistencia de sesiones de chat."""
 

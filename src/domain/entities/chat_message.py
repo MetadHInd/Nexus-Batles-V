@@ -4,7 +4,22 @@ Representa un mensaje en la conversación del chatbot.
 """
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import Literal
+
+
+class ChatIntent(Enum):
+    HEROES = "hero_query"
+    ITEMS = "item_query"
+    HERO_STATS = "hero_stats"
+    MECANICAS = "how_to_play"
+    CUENTA = "account_help"
+    SUBASTA = "market_query"
+    SOPORTE = "support"
+    FAQ = "faq"
+    GREETING = "greeting"
+    HELP = "help"
+    GENERAL = "general"
 
 
 @dataclass

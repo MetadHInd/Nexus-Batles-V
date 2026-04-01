@@ -1,20 +1,23 @@
 {
   "game_info": {
     "nombre": "THE NEXUS BATTLES V",
-    "descripcion": "Juego de cartas donde cada jugador tiene un mazo de 52 cartas y un héroe principal que guiará sus aventuras.",
-    "mecanica_poder": "El poder se recupera instantáneamente al concluir el combate o 2 puntos por turno durante el combate. Sin poder suficiente, el ataque se reduce a su valor base.",
-    "mecanica_vida": "Si la vida llega a 0, el héroe fallece y el juego termina.",
-    "mecanica_defensa": "Una defensa superior disminuye el daño recibido.",
-    "mecanica_ataque": "Un ataque más elevado que la defensa del rival incrementa la probabilidad de acierto.",
-    "mecanica_daño": "Cantidad de daño que el héroe inflige en un ataque exitoso.",
-    "tabla_efectos": "Cada ataque usa una tabla de 8000 filas. Si supera la defensa enemiga, se selecciona una fila aleatoria que determina el efecto (daño normal, crítico, evasión, resistencia, escape, o sin efecto).",
-    "efectos_critico": "Causa entre 120% a 180% de daño al contrario.",
-    "efectos_evade": "Causa 80% de daño al contrario.",
-    "efectos_resiste": "Causa 60% de daño al contrario.",
-    "efectos_escapa": "Causa 20% de daño al contrario."
+    "subtitulo": "The Empire Strikes Back",
+    "descripcion": "Juego de cartas por turnos donde cada jugador controla un héroe principal (y opcionalmente uno secundario) y un mazo de 52 cartas. El objetivo es derrotar al oponente reduciendo su vida a 0 mediante ataques, habilidades y efectos especiales.",
+    "mecanica_general": "Combate por turnos con orden aleatorio inicial. No se puede dañar a los aliados (excepto efectos especiales). El combate termina cuando queda un solo héroe o equipo en pie.",
+    "mecanica_poder": "El poder se recupera instantáneamente al concluir el combate o +2 puntos por turno durante el combate. Si no hay suficiente poder, el ataque se reduce a su valor base.",
+    "mecanica_vida": "Si la vida llega a 0, el héroe fallece y el juego termina para ese héroe/equipo.",
+    "mecanica_defensa": "Una defensa superior reduce el daño recibido del oponente.",
+    "mecanica_ataque": "Un ataque más elevado que la defensa del rival incrementa significativamente la probabilidad de acertar.",
+    "mecanica_daño": "Cantidad de daño que el héroe inflige en un ataque exitoso. Se modifica por críticos, resistencias y efectos de equipo.",
+    "tabla_efectos": "Cada ataque consulta una tabla de efectos aleatorios (8000 filas). Si el ataque supera la defensa enemiga, se selecciona una fila que determina el resultado: daño normal, crítico, evasión, resistencia, escape o sin efecto.",
+    "efectos_critico": "Causa entre 120% y 180% del daño normal.",
+    "efectos_evade": "Causa 80% del daño normal.",
+    "efectos_resiste": "Causa 60% del daño normal.",
+    "efectos_escapa": "Causa 20% del daño normal.",
+    "keywords": ["nexus battles", "juego de cartas", "combate por turnos", "héroes", "mazo"]
   },
   "mazo": {
-    "descripcion": "Cada jugador arma dos mazos: uno para el héroe principal y uno para el secundario.",
+    "descripcion": "Cada jugador arma un mazo principal de 52 cartas y puede tener un héroe secundario con su propio mazo.",
     "composicion": {
       "habilidades_heroe": { "seleccion": 3, "multiplicador": 4, "total": 12 },
       "armas": { "seleccion": 2, "multiplicador": 4, "total": 8 },
@@ -26,14 +29,17 @@
     },
     "equipamiento_maximo": {
       "armaduras": "Hasta 6 partes: Casco, Pecho, Guantes, Brazaletes, Pantalón y Zapatos",
-      "items": "Máximo 2 ítems simultáneos"
-    }
+      "items": "Máximo 2 ítems equipados simultáneamente"
+    },
+    "nota": "El mazo total puede llegar a 64 cartas cuando se incluyen las épicas."
   },
   "cartas_epicas": {
-    "descripcion": "Habilidades especiales que no usan puntos de poder y tienen 2 turnos de recarga.",
-    "como_obtener": "Solo como recompensas especiales al derrotar enemigos 'Máster' en misiones.",
-    "nota": "Los enemigos Máster solo se encuentran en las misiones."
+    "descripcion": "Habilidades especiales poderosas que no consumen puntos de poder y tienen un cooldown de 2 turnos.",
+    "como_obtener": "Únicamente como recompensa al derrotar enemigos 'Máster' en las misiones.",
+    "nota": "Los enemigos Máster solo aparecen en modo Misiones. No se pueden obtener en batallas normales."
   },
+  
+
   "items": [
     {
       "id": "item_001",
@@ -41,7 +47,8 @@
       "hero_type": "warrior",
       "subtype": "tanque",
       "efecto": "Si el ataque del oponente es menor que la defensa del guerrero, el oponente recibe +1 de daño",
-      "tradeable": true
+      "tradeable": true,
+      "keywords": ["pinchos", "escudo", "reflejo", "defensa"]
     },
     {
       "id": "item_002",
@@ -49,7 +56,8 @@
       "hero_type": "warrior",
       "subtype": "armas",
       "efecto": "+1 de daño por dos turnos. Causa que el guerrero pierda -1 de vida en los mismos turnos.",
-      "tradeable": true
+      "tradeable": true,
+      "keywords": ["furia", "daño", "autodaño"]
     },
     {
       "id": "item_003",
@@ -57,7 +65,8 @@
       "hero_type": "mage",
       "subtype": "fuego",
       "efecto": "+3 de daño",
-      "tradeable": true
+      "tradeable": true,
+      "keywords": ["piroxplosión", "fuego", "daño mágico"]
     },
     {
       "id": "item_004",
@@ -65,7 +74,8 @@
       "hero_type": "mage",
       "subtype": "hielo",
       "efecto": "+2 de daño",
-      "tradeable": true
+      "tradeable": true,
+      "keywords": ["ventisca", "hielo", "daño"]
     },
     {
       "id": "item_005",
@@ -73,7 +83,8 @@
       "hero_type": "rogue",
       "subtype": "veneno",
       "efecto": "-1 al poder del oponente. Solo aplica cada dos turnos.",
-      "tradeable": true
+      "tradeable": true,
+      "keywords": ["veneno", "debuff", "poder"]
     },
     {
       "id": "item_006",
@@ -81,7 +92,8 @@
       "hero_type": "rogue",
       "subtype": "machete",
       "efecto": "Explota por 2 el valor en turno causado por la Cierra sangrienta en el oponente",
-      "tradeable": true
+      "tradeable": true,
+      "keywords": ["yugular", "machete", "explosión"]
     },
     {
       "id": "item_007",
@@ -89,7 +101,8 @@
       "hero_type": "healer",
       "subtype": "chaman",
       "efecto": "Mejora la sanación multiplicando x2",
-      "tradeable": true
+      "tradeable": true,
+      "keywords": ["pluma", "sanación", "multiplicador"]
     },
     {
       "id": "item_008",
@@ -97,9 +110,11 @@
       "hero_type": "healer",
       "subtype": "medico",
       "efecto": "Sana las heridas por tres turnos o cura +1 por tres turnos",
-      "tradeable": true
+      "tradeable": true,
+      "keywords": ["benditas", "sanación", "regeneración"]
     }
   ],
+
   "weapons": [
     { "id": "w_001", "name": "Espada de una mano", "hero_type": "warrior", "subtype": "tanque", "set": 1, "efecto": "+1 al ataque, +1% de crítico al ataque" },
     { "id": "w_002", "name": "Escudo de dragón", "hero_type": "warrior", "subtype": "tanque", "set": 2, "efecto": "+1 a la defensa" },
@@ -118,6 +133,7 @@
     { "id": "w_015", "name": "Kit de urgencias", "hero_type": "healer", "subtype": "medico", "set": 1, "efecto": "+(2d6) de sanación" },
     { "id": "w_016", "name": "Reanimador", "hero_type": "healer", "subtype": "medico", "set": 2, "efecto": "+(4d6) de sanación" }
   ],
+
   "armor": [
     { "id": "a_001", "name": "Defensa del enfurecido", "tipo": "Pecho", "hero_type": "warrior", "efecto": "+2 a la defensa, +2 de vida" },
     { "id": "a_002", "name": "Puño lúcido", "tipo": "Guantes", "hero_type": "warrior", "efecto": "+2 a la defensa, +1 de vida" },

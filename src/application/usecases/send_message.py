@@ -10,6 +10,7 @@ from src.domain.entities.chat_message import ChatSession
 from src.domain.repositories.contracts import (
     HeroRepositoryPort,
     ItemRepositoryPort,
+    KnowledgeRepositoryPort,
     ChatSessionRepositoryPort,
 )
 from src.domain.services.chatbot_service import ChatbotDomainService
@@ -58,12 +59,14 @@ class SendMessageUseCase:
         session_repo: ChatSessionRepositoryPort,
         ai_gateway: AIGatewayPort,
         domain_service: ChatbotDomainService,
+        knowledge_repo: KnowledgeRepositoryPort | None = None,
     ):
         self._heroes = hero_repo
         self._items = item_repo
         self._sessions = session_repo
         self._ai = ai_gateway
         self._domain = domain_service
+        self._knowledge_repo = knowledge_repo
 
     async def execute(self, input_data: SendMessageInput) -> SendMessageOutput:
         # 1. Validar mensaje
@@ -133,9 +136,9 @@ class SendMessageUseCase:
     def _build_knowledge_context(self, intent: str, message: str) -> dict:
         """
         Construye el contexto de conocimiento según la intención.
-        Solo carga los datos relevantes para no sobrecargar el prompt.
+        Carga la base completa de knowledge_base y agrega detalles específicos cuando aplica.
         """
-        context = {}
+        context = {"knowledge_base": self._knowledge_repo.load()} if self._knowledge_repo else {}
         message_lower = message.lower()
 
         # Contexto de héroes
@@ -143,7 +146,6 @@ class SendMessageUseCase:
             heroes = self._heroes.find_all()
             context["heroes"] = [h.to_summary() for h in heroes]
 
-            # Si pregunta por un héroe específico, incluir detalle completo
             for hero in heroes:
                 if hero.name.lower() in message_lower or hero.hero_type.lower() in message_lower:
                     context["hero_detail"] = {
@@ -168,7 +170,6 @@ class SendMessageUseCase:
             items = self._items.find_all()
             context["items"] = [i.to_summary() for i in items]
 
-            # Si pregunta por ítem específico, incluir detalle
             for item in items:
                 if item.name.lower() in message_lower or item.item_type.lower() in message_lower:
                     context["item_detail"] = {
