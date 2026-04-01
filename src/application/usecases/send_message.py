@@ -100,7 +100,11 @@ class SendMessageUseCase:
 
         # 6. Construir system prompt con conocimiento
         system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-            knowledge=json.dumps(knowledge, ensure_ascii=False, indent=2)
+            knowledge=json.dumps(
+                knowledge,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
         )
 
         # 7. Agregar mensaje del usuario al historial
@@ -136,9 +140,15 @@ class SendMessageUseCase:
     def _build_knowledge_context(self, intent: str, message: str) -> dict:
         """
         Construye el contexto de conocimiento según la intención.
-        Carga la base completa de knowledge_base y agrega detalles específicos cuando aplica.
+        Carga solo el conocimiento relevante de la base y agrega detalles específicos.
         """
-        context = {"knowledge_base": self._knowledge_repo.load()} if self._knowledge_repo else {}
+        context: dict = {}
+        if self._knowledge_repo:
+            knowledge = self._knowledge_repo.load()
+            filtered = self._filter_knowledge_by_intent(knowledge, intent, message)
+            if filtered:
+                context["knowledge_base"] = filtered
+
         message_lower = message.lower()
 
         # Contexto de héroes
@@ -190,3 +200,34 @@ class SendMessageUseCase:
                     break
 
         return context
+
+    def _filter_knowledge_by_intent(self, knowledge: dict, intent: str, message: str) -> dict:
+        """Filtra la base de conocimiento para mantener solo los datos relevantes."""
+        if not isinstance(knowledge, dict):
+            return {}
+
+        message_lower = message.lower()
+        hero_intents = {"hero_query", "hero_stats", "rarity_query"}
+        item_intents = {"item_query", "item_compat", "item_price", "rarity_query"}
+        help_intents = {"how_to_play", "faq", "support", "market_query"}
+
+        if intent in hero_intents:
+            keys = ["heroes", "habilidades", "epicas", "mecanicas", "game_info"]
+        elif intent in item_intents:
+            keys = ["items", "weapons", "armor", "arma", "armaduras", "random_effects_system"]
+        elif intent in help_intents:
+            keys = ["mecanicas", "game_info", "notes", "power_recovery", "deck_composition"]
+        else:
+            keys = ["heroes", "items", "mecanicas", "game_info"]
+
+        filtered = {key: knowledge[key] for key in keys if key in knowledge}
+
+        # Añadir secciones específicas si se menciona nombre de héroe o ítem.
+        if intent in hero_intents and "heroes" in knowledge:
+            filtered["heroes"] = knowledge["heroes"]
+        if intent in item_intents:
+            for section in ("items", "weapons", "armor", "arma", "armaduras"):
+                if section in knowledge:
+                    filtered[section] = knowledge[section]
+
+        return filtered
