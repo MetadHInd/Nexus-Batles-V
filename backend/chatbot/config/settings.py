@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     # ─── IA ───────────────────────────────────────────────────────────────────
     groq_api_key: str = Field(..., alias="GROQ_API_KEY")
+    ai_api_key: str | None = Field(None, alias="AI_API_KEY")
+    ai_api_url: str = Field("https://api.groq.com", alias="AI_API_URL")
 
     # ─── CORS ─────────────────────────────────────────────────────────────────
     cors_origin: str = Field(default="http://localhost:3000", alias="CORS_ORIGIN")
@@ -26,6 +28,11 @@ class Settings(BaseSettings):
     rate_limit_window: int = Field(default=60, alias="RATE_LIMIT_WINDOW")
 
     model_config = {"env_file": ".env", "populate_by_name": True, "extra": "ignore"}
+
+
+    @property
+    def resolved_ai_api_key(self) -> str:
+        return self.ai_api_key or self.groq_api_key
 
 
 def get_settings() -> Settings:

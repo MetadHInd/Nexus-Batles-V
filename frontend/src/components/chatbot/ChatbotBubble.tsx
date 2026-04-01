@@ -72,20 +72,6 @@ export function ChatbotBubble() {
 
   return (
     <div className="chatbot-root">
-      {/* ── Orb flotante ──────────────────────────────── */}
-      <button
-        className={`chatbot-orb${isOpen ? ' chatbot-orb--open' : ''}`}
-        onClick={toggle}
-        aria-label={isOpen ? 'Cerrar NexusBot' : 'Abrir NexusBot'}
-        title="NexusBot — Oráculo del Nexus"
-      >
-        <div className="chatbot-orb__pulse" />
-        <span className="chatbot-orb__icon">{isOpen ? '✕' : '⚔'}</span>
-        {unreadCount > 0 && !isOpen && (
-          <span className="chatbot-orb__badge">{unreadCount}</span>
-        )}
-      </button>
-
       {/* ── Ventana del chat ──────────────────────────── */}
       <div
         className={`chatbot-window${isOpen ? ' chatbot-window--open' : ''}`}
@@ -124,7 +110,6 @@ export function ChatbotBubble() {
 
         {/* Mensajes */}
         <div className="chatbot-messages">
-          {/* Mensaje de bienvenida */}
           {messages.length === 0 && (
             <div className="chatbot-welcome">
               <div className="chatbot-welcome__icon">🔮</div>
@@ -136,7 +121,6 @@ export function ChatbotBubble() {
             </div>
           )}
 
-          {/* Historial de mensajes */}
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -152,7 +136,6 @@ export function ChatbotBubble() {
             </div>
           ))}
 
-          {/* Typing indicator */}
           {isTyping && (
             <div className="chatbot-msg chatbot-msg--assistant">
               <div className="chatbot-msg__avatar">N</div>
@@ -214,6 +197,20 @@ export function ChatbotBubble() {
           </button>
         </div>
       </div>
+
+      {/* ── Orb flotante ──────────────────────────────── */}
+      <button
+        className={`chatbot-orb${isOpen ? ' chatbot-orb--open' : ''}`}
+        onClick={toggle}
+        aria-label={isOpen ? 'Cerrar NexusBot' : 'Abrir NexusBot'}
+        title="NexusBot — Oráculo del Nexus"
+      >
+        <div className="chatbot-orb__pulse" />
+        <span className="chatbot-orb__icon">{isOpen ? '✕' : '⚔'}</span>
+        {unreadCount > 0 && !isOpen && (
+          <span className="chatbot-orb__badge">{unreadCount}</span>
+        )}
+      </button>
     </div>
   );
 }
