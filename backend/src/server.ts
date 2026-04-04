@@ -25,6 +25,7 @@ import productRoutes from './infrastructure/http/routes/productRoutes';
 import { createInventoryRoutes } from './infrastructure/http/routes/inventory.routes';
 import { createRatingRoutes }    from './infrastructure/http/routes/rating.routes';
 import { createAuthRoutes }      from './infrastructure/http/routes/auth.routes';
+import { createAdminChatbotRoutes } from './infrastructure/http/routes/adminChatbot.routes';
 
 // ── Repositorios ──────────────────────────────────────────────────────────────
 import { MySQLItemRepository }    from './infrastructure/repositories/MySQLItemRepository';
@@ -49,6 +50,7 @@ import { LoginUser }    from './application/usecases/auth/LoginUser';
 import { InventoryController } from './infrastructure/http/controllers/InventoryController';
 import { RatingController }    from './infrastructure/http/controllers/RatingController';
 import { AuthController }      from './infrastructure/http/controllers/AuthController';
+import { AdminChatbotController } from './infrastructure/http/controllers/AdminChatbotController';
 import { RatingService }       from './domain/services/RatingService';
 
 // ============================================================
@@ -79,6 +81,8 @@ const authControllerV2 = new AuthController(
   new RegisterUser(userRepository, passwordHasher, tokenService, emailService),
   new LoginUser(userRepository, passwordHasher, tokenService),
 );
+
+const adminChatbotController = new AdminChatbotController();
 
 // ============================================================
 // EXPRESS APP
@@ -123,6 +127,7 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/inventory', inventoryLimiter, createInventoryRoutes(inventoryController));
 app.use('/api/v1', createRatingRoutes(ratingController));
 app.use('/api/v2/auth', createAuthRoutes(authControllerV2));
+app.use('/api/admin-chatbot', createAdminChatbotRoutes(adminChatbotController));
 
 app.use(errorHandler);
 

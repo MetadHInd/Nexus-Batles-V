@@ -27,6 +27,28 @@ class Settings(BaseSettings):
     rate_limit_max: int = Field(default=10, alias="RATE_LIMIT_MAX")
     rate_limit_window: int = Field(default=60, alias="RATE_LIMIT_WINDOW")
 
+    # ─── Chatbot - Límites y Configuración ────────────────────────────────────
+    max_history_messages: int = Field(
+        default=15,
+        alias="MAX_HISTORY_MESSAGES",
+    )
+    max_context_tokens: int = Field(
+        default=4000,
+        alias="MAX_CONTEXT_TOKENS",
+    )
+    groq_timeout_seconds: int = Field(
+        default=30,
+        alias="GROQ_TIMEOUT_SECONDS",
+    )
+    groq_max_retries: int = Field(
+        default=2,
+        alias="GROQ_MAX_RETRIES",
+    )
+    token_estimate_ratio: float = Field(
+        default=4.0,
+        alias="TOKEN_ESTIMATE_RATIO",
+    )
+
     model_config = {"env_file": ".env", "populate_by_name": True, "extra": "ignore"}
 
 

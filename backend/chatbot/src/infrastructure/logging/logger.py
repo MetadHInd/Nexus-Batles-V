@@ -16,3 +16,22 @@ def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
         logger.propagate = False
 
     return logger
+
+
+def log_context_selection(
+    logger: logging.Logger,
+    question: str,
+    selected_categories: list[str],
+    used_fallback: bool,
+    context_payload: str,
+) -> None:
+    truncated_question = question[:100]
+    estimated_tokens = max(1, len(context_payload) // 4) if context_payload else 0
+
+    logger.info(
+        "context_selection question='%s' categories=%s fallback=%s estimated_tokens=%s",
+        truncated_question,
+        selected_categories,
+        used_fallback,
+        estimated_tokens,
+    )

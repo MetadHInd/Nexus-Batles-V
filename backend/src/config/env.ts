@@ -25,6 +25,8 @@ const envSchema = z.object({
   REDIS_URL: z.string().optional(),
   CORS_ORIGIN: z.string(),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+  ADMIN_USERNAME: z.string().default('AdminChatbot123'),
+  ADMIN_PASSWORD: z.string().default('ChatbotAdmin123'),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -8,13 +8,20 @@ from dataclasses import dataclass
 
 from src.domain.entities.chat_message import ChatSession
 from src.domain.repositories.contracts import (
-    HeroRepositoryPort,
-    ItemRepositoryPort,
-    KnowledgeRepositoryPort,
     ChatSessionRepositoryPort,
 )
 from src.domain.services.chatbot_service import ChatbotDomainService
+from src.domain.services.ConversationWindowService import ConversationWindowService
 from src.application.ports.ai_gateway_port import AIGatewayPort, AIGatewayError
+from src.domain.repositories.IKnowledgeBaseRepository import IKnowledgeBaseRepository
+from src.domain.services.ContextSelectorService import ContextSelectorService
+from src.domain.errors.chatbot_errors import (
+    GroqUnavailableError,
+    GroqRateLimitError,
+    GroqTimeoutError,
+    ContextTooLargeError,
+)
+from src.infrastructure.logging.logger import get_logger, log_context_selection
 
 
 @dataclass
@@ -54,19 +61,19 @@ class SendMessageUseCase:
 
     def __init__(
         self,
-        hero_repo: HeroRepositoryPort,
-        item_repo: ItemRepositoryPort,
         session_repo: ChatSessionRepositoryPort,
         ai_gateway: AIGatewayPort,
         domain_service: ChatbotDomainService,
-        knowledge_repo: KnowledgeRepositoryPort | None = None,
+        context_selector: ContextSelectorService,
+        knowledge_base_repo: IKnowledgeBaseRepository,
     ):
-        self._heroes = hero_repo
-        self._items = item_repo
         self._sessions = session_repo
         self._ai = ai_gateway
         self._domain = domain_service
-        self._knowledge_repo = knowledge_repo
+        self._context_selector = context_selector
+        self._knowledge_base_repo = knowledge_base_repo
+        self._logger = get_logger("nexus.chatbot.context")
+        self._error_logger = get_logger("nexus.chatbot.errors")
 
     async def execute(self, input_data: SendMessageInput) -> SendMessageOutput:
         # 1. Validar mensaje
@@ -107,29 +114,106 @@ class SendMessageUseCase:
             )
         )
 
-        # 7. Agregar mensaje del usuario al historial
+        # 7. Agregar mensaje del usuario al historial (sesión completa)
         session.add_message("user", input_data.message)
 
-        # 8. Llamar al gateway de IA (nunca directamente al LLM)
+        # 8. Aplicar ventana deslizante al historial ANTES de enviarlo a Groq
+        full_history = session.get_history_for_llm()[:-1]  # sin el último mensaje
+        windowed = ConversationWindowService.apply_window(
+            full_history=full_history,
+            system_prompt=system_prompt,
+            user_message=input_data.message,
+        )
+        ConversationWindowService.log_truncation(windowed, input_data.message)
+
+        # 9. Llamar al gateway de IA con historial truncado (pero session completa se persiste)
         try:
             bot_reply = await self._ai.generate_response(
                 system_prompt=system_prompt,
-                history=session.get_history_for_llm()[:-1],  # sin el último mensaje
+                history=windowed.messages,  # ← Usar historial truncado
                 user_message=input_data.message,
             )
-        except AIGatewayError as e:
+
+        except GroqRateLimitError as e:
+            self._error_logger.warning(
+                f"Rate limit en Groq | Usuario: {input_data.user_id} | "
+                f"Pregunta: {input_data.message[:100]}"
+            )
             return SendMessageOutput(
                 user_id=input_data.user_id,
-                response="⚠️ El oráculo no responde en este momento. Intenta de nuevo en breve.",
+                response="⏳ Demasiadas consultas seguidas. Espera un momento antes de continuar.",
+                intent="rate_limit",
+                suggestions=self._domain.get_suggestions("help"),
+            )
+
+        except GroqTimeoutError as e:
+            self._error_logger.warning(
+                f"Timeout en Groq | Usuario: {input_data.user_id} | "
+                f"Pregunta: {input_data.message[:100]}"
+            )
+            return SendMessageOutput(
+                user_id=input_data.user_id,
+                response="⏱️ La consulta tardó demasiado. Intenta con una pregunta más corta.",
+                intent="timeout",
+                suggestions=self._domain.get_suggestions("help"),
+            )
+
+        except ContextTooLargeError as e:
+            self._error_logger.error(
+                f"Contexto demasiado grande | Usuario: {input_data.user_id} | "
+                f"Tokens estimados: {windowed.tokens_before} | "
+                f"Pregunta: {input_data.message[:100]}"
+            )
+            return SendMessageOutput(
+                user_id=input_data.user_id,
+                response="📚 La conversación es muy larga. Considera iniciar un nuevo chat.",
+                intent="context_too_large",
+                suggestions=self._domain.get_suggestions("help"),
+            )
+
+        except GroqUnavailableError as e:
+            self._error_logger.error(
+                f"Groq no disponible | Usuario: {input_data.user_id} | "
+                f"Error: {str(e)[:200]}"
+            )
+            return SendMessageOutput(
+                user_id=input_data.user_id,
+                response="⚠️ El asistente no está disponible en este momento. Intenta en unos segundos.",
                 intent="service_unavailable",
                 suggestions=self._domain.get_suggestions("help"),
             )
 
-        # 9. Guardar respuesta en sesión y persistir
+        except AIGatewayError as e:
+            self._error_logger.error(
+                f"Error inesperado del gateway | Usuario: {input_data.user_id} | "
+                f"Error: {str(e)[:200]}",
+                exc_info=True,
+            )
+            return SendMessageOutput(
+                user_id=input_data.user_id,
+                response="❌ Ocurrió un error inesperado. Intenta nuevamente.",
+                intent="internal_error",
+                suggestions=self._domain.get_suggestions("help"),
+            )
+
+        except Exception as e:
+            self._error_logger.error(
+                f"Error no controlado en send_message | Usuario: {input_data.user_id} | "
+                f"Error: {str(e)[:200]}",
+                exc_info=True,
+            )
+            return SendMessageOutput(
+                user_id=input_data.user_id,
+                response="❌ Ocurrió un error inesperado. Intenta nuevamente.",
+                intent="internal_error",
+                suggestions=self._domain.get_suggestions("help"),
+            )
+
+        # 10. Guardar respuesta en sesión (historial COMPLETO se persiste, no el truncado)
         session.add_message("assistant", bot_reply)
         self._sessions.save(session)
 
-        # 10. Retornar resultado
+        # 11. Retornar resultado
         return SendMessageOutput(
             user_id=input_data.user_id,
             response=bot_reply,
@@ -143,91 +227,30 @@ class SendMessageUseCase:
         Carga solo el conocimiento relevante de la base y agrega detalles específicos.
         """
         context: dict = {}
-        if self._knowledge_repo:
-            knowledge = self._knowledge_repo.load()
-            filtered = self._filter_knowledge_by_intent(knowledge, intent, message)
-            if filtered:
-                context["knowledge_base"] = filtered
+        selected_categories, used_fallback = self._context_selector.select_categories(message)
+        knowledge_by_category: dict[str, list[dict]] = {}
 
-        message_lower = message.lower()
+        for category in selected_categories:
+            try:
+                rows = self._knowledge_base_repo.get_by_categoria(category)
+            except Exception:
+                rows = []
+            if rows:
+                knowledge_by_category[category] = rows
 
-        # Contexto de héroes
-        if intent in ("hero_query", "hero_stats", "rarity_query", "item_compat", "how_to_play"):
-            heroes = self._heroes.find_all()
-            context["heroes"] = [h.to_summary() for h in heroes]
+        context["knowledge_base"] = {
+            "selected_categories": selected_categories,
+            "used_fallback": used_fallback,
+            "data": knowledge_by_category,
+        }
 
-            for hero in heroes:
-                if hero.name.lower() in message_lower or hero.hero_type.lower() in message_lower:
-                    context["hero_detail"] = {
-                        "name": hero.name,
-                        "type": hero.hero_type,
-                        "rarity": hero.rarity,
-                        "stats": {
-                            "hp": hero.stats.hp,
-                            "attack": hero.stats.attack,
-                            "defense": hero.stats.defense,
-                            "speed": hero.stats.speed,
-                            "mana": hero.stats.mana,
-                        },
-                        "abilities": hero.abilities,
-                        "special_power": hero.special_power,
-                        "lore": hero.lore,
-                    }
-                    break
-
-        # Contexto de ítems
-        if intent in ("item_query", "item_compat", "item_price", "rarity_query"):
-            items = self._items.find_all()
-            context["items"] = [i.to_summary() for i in items]
-
-            for item in items:
-                if item.name.lower() in message_lower or item.item_type.lower() in message_lower:
-                    context["item_detail"] = {
-                        "name": item.name,
-                        "type": item.item_type,
-                        "rarity": item.rarity,
-                        "stats": {
-                            "attack_bonus": item.stats.attack_bonus,
-                            "defense_bonus": item.stats.defense_bonus,
-                            "speed_bonus": item.stats.speed_bonus,
-                            "hp_bonus": item.stats.hp_bonus,
-                            "mana_bonus": item.stats.mana_bonus,
-                        },
-                        "compatible_heroes": item.compatible_heroes,
-                        "description": item.description,
-                        "price": item.price,
-                    }
-                    break
+        context_payload = json.dumps(context["knowledge_base"], ensure_ascii=False, separators=(",", ":"))
+        log_context_selection(
+            logger=self._logger,
+            question=message,
+            selected_categories=selected_categories,
+            used_fallback=used_fallback,
+            context_payload=context_payload,
+        )
 
         return context
-
-    def _filter_knowledge_by_intent(self, knowledge: dict, intent: str, message: str) -> dict:
-        """Filtra la base de conocimiento para mantener solo los datos relevantes."""
-        if not isinstance(knowledge, dict):
-            return {}
-
-        message_lower = message.lower()
-        hero_intents = {"hero_query", "hero_stats", "rarity_query"}
-        item_intents = {"item_query", "item_compat", "item_price", "rarity_query"}
-        help_intents = {"how_to_play", "faq", "support", "market_query"}
-
-        if intent in hero_intents:
-            keys = ["heroes", "habilidades", "epicas", "mecanicas", "game_info"]
-        elif intent in item_intents:
-            keys = ["items", "weapons", "armor", "arma", "armaduras", "random_effects_system"]
-        elif intent in help_intents:
-            keys = ["mecanicas", "game_info", "notes", "power_recovery", "deck_composition"]
-        else:
-            keys = ["heroes", "items", "mecanicas", "game_info"]
-
-        filtered = {key: knowledge[key] for key in keys if key in knowledge}
-
-        # Añadir secciones específicas si se menciona nombre de héroe o ítem.
-        if intent in hero_intents and "heroes" in knowledge:
-            filtered["heroes"] = knowledge["heroes"]
-        if intent in item_intents:
-            for section in ("items", "weapons", "armor", "arma", "armaduras"):
-                if section in knowledge:
-                    filtered[section] = knowledge[section]
-
-        return filtered

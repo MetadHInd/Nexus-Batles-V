@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { useAdminChatbotStore } from '@/store/adminChatbotStore';
 
 // Layout
 import Navbar from '@/components/Navbar';
@@ -17,6 +18,8 @@ import ItemDetailPage from '@/pages/ItemDetailPage';
 import RankingsPage from '@/pages/RankingsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ShopPage from '@/pages/ShopPage';
+import AdminChatbotLoginPage from '@/pages/AdminChatbotLoginPage';
+import AdminChatbotPanelPage from '@/pages/AdminChatbotPanelPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
@@ -26,6 +29,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function GuestRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" replace />;
+}
+
+function AdminChatbotProtectedRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAdminChatbotStore((s) => s.isAuthenticated);
+  return isAuthenticated ? <>{children}</> : <Navigate to="/admin-chatbot/login" replace />;
+}
+
+function AdminChatbotGuestRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAdminChatbotStore((s) => s.isAuthenticated);
+  return !isAuthenticated ? <>{children}</> : <Navigate to="/admin-chatbot" replace />;
 }
 
 function WithNavbar({ children }: { children: React.ReactNode }) {
@@ -52,6 +65,16 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+
+        {/* Rutas admin-chatbot — sin Navbar de juego */}
+        <Route
+          path="/admin-chatbot/login"
+          element={<AdminChatbotGuestRoute><AdminChatbotLoginPage /></AdminChatbotGuestRoute>}
+        />
+        <Route
+          path="/admin-chatbot"
+          element={<AdminChatbotProtectedRoute><AdminChatbotPanelPage /></AdminChatbotProtectedRoute>}
+        />
 
         {/* Rutas protegidas — con Navbar */}
         <Route

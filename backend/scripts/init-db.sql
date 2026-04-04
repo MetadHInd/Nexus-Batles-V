@@ -187,3 +187,32 @@ CREATE TABLE IF NOT EXISTS token_blacklist (
   expires_at DATETIME  NOT NULL,
   INDEX idx_expires (expires_at)
 );
+
+-- ── Auditoría del panel admin (chatbot KB) ───────────────────
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  fecha_hora    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  categoria     VARCHAR(100) NOT NULL,
+  accion        ENUM('agregar', 'editar', 'eliminar') NOT NULL,
+  detalle       VARCHAR(255) NOT NULL,
+  admin_usuario VARCHAR(100) NOT NULL,
+  INDEX idx_admin_log_fecha (fecha_hora DESC)
+);
+
+-- ── Knowledge base del chatbot (migración desde JSON) ───────
+CREATE TABLE IF NOT EXISTS knowledge_base_entries (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  categoria    VARCHAR(100)  NOT NULL,
+  subcategoria VARCHAR(150)  NULL,
+  entry_id     VARCHAR(191)  NOT NULL,
+  nombre       VARCHAR(255)  NULL,
+  datos        JSON          NOT NULL,
+  source_file  VARCHAR(120)  NOT NULL,
+  source_path  VARCHAR(255)  NOT NULL,
+  created_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_kb_categoria_subcategoria_entry (categoria, subcategoria, entry_id),
+  INDEX idx_kb_categoria (categoria),
+  INDEX idx_kb_categoria_nombre (categoria, nombre),
+  INDEX idx_kb_source (source_file, source_path)
+);
