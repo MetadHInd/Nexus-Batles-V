@@ -159,6 +159,9 @@ export class MercadoPagoGateway implements IPaymentGateway {
 
   // ─── HTTP Helper ──────────────────────────────────────────────────────────────
 
+  // HU: Manejo de errores de pasarela — timeout configurado en 30 segundos
+  private static readonly GATEWAY_TIMEOUT_MS = 30_000;
+
   private _request<T>(
     method: string,
     path: string,
@@ -177,7 +180,14 @@ export class MercadoPagoGateway implements IPaymentGateway {
       if (bodyStr)         headers['Content-Length']    = Buffer.byteLength(bodyStr);
 
       const req = https.request(
-        { hostname: 'api.mercadopago.com', path, method, headers },
+        {
+          hostname: 'api.mercadopago.com',
+          path,
+          method,
+          headers,
+          // HU: Manejo de errores — ante timeout de la pasarela (>30s) se emite ETIMEDOUT
+          timeout: MercadoPagoGateway.GATEWAY_TIMEOUT_MS,
+        },
         (res) => {
           let data = '';
           res.on('data', chunk => { data += chunk; });
@@ -197,6 +207,16 @@ export class MercadoPagoGateway implements IPaymentGateway {
           });
         }
       );
+
+      // HU: Manejo de errores — el evento 'timeout' destruye la conexión y emite ETIMEDOUT
+      req.on('timeout', () => {
+        req.destroy();
+        const timeoutErr: NodeJS.ErrnoException = new Error(
+          `MercadoPago gateway timeout after ${MercadoPagoGateway.GATEWAY_TIMEOUT_MS}ms`
+        );
+        timeoutErr.code = 'ETIMEDOUT';
+        reject(timeoutErr);
+      });
 
       req.on('error', reject);
       if (bodyStr) req.write(bodyStr);
