@@ -10,9 +10,12 @@ import {
   TRANSACTION_STATUS,
   AUDIT_ACTIONS,
 } from '../../../payments/constants/payments.constants';
-import type { IPaymentRepository }   from '../../../domain/repositories/IPaymentRepository';
-import type { IPaymentGateway }      from '../../ports/IPaymentGateway';
-import { logger }                    from '../../../infrastructure/logging/logger';
+import type { IPaymentRepository }      from '../../../domain/repositories/IPaymentRepository';
+import type { IPaymentGateway }         from '../../ports/IPaymentGateway';
+import { logger }                       from '../../../infrastructure/logging/logger';
+// HU: Manejo de errores de pasarela de pago
+import { PaymentErrorClassifier }       from '../../../payments/domain/services/PaymentErrorClassifier';
+import { PaymentGatewayError }          from '../../../payments/domain/errors/PaymentGatewayError';
 
 export interface ProcessPaymentInput {
   orderId:   string;
@@ -99,8 +102,11 @@ export class ProcessPaymentUseCase {
           }],
         });
       } catch (gatewayErr: any) {
-        await this._handleGatewayError(transactionId, orderId, userId, gatewayErr);
-        throw this._error('GATEWAY_ERROR', 'Error al procesar el pago en la pasarela', 502);
+        // HU: Manejo de errores — clasificar el error antes de registrarlo
+        const typedError = PaymentErrorClassifier.classify(gatewayErr);
+        await this._handleGatewayError(transactionId, orderId, userId, typedError);
+        // Propagar el mensajeUsuario al cliente (tokens_acreditados = 0 garantizado)
+        throw this._error('GATEWAY_ERROR', typedError.mensajeUsuario, 502);
       }
 
       // ── 6. Actualizar transacción con datos de pasarela ───────────────────────
@@ -141,31 +147,67 @@ export class ProcessPaymentUseCase {
     }
   }
 
+  /**
+   * HU: Manejo de errores de pasarela de pago
+   *
+   * Postcondiciones garantizadas:
+   *   - El saldo (tokens) del usuario NO se modifica.
+   *   - Se registra el intento fallido con status FALLIDA en la transacción.
+   *   - Se registra acción TX_FALLIDA en el log de auditoría con tipo_error y mensaje_usuario.
+   */
   private async _handleGatewayError(
     transactionId: string,
     orderId:       string,
     userId:        number,
-    gatewayErr:    any
+    typedError:    PaymentGatewayError,
   ): Promise<void> {
     const conn = await this.repository.beginTransaction();
     try {
+      // Marcar transacción como FALLIDA (no ERROR genérico) con metadata de clasificación
       await this.repository.updateTransactionStatus(
-        transactionId, TRANSACTION_STATUS.ERROR,
-        { error: gatewayErr.message, gatewayError: gatewayErr.gatewayError }, conn
+        transactionId,
+        TRANSACTION_STATUS.FALLIDA,
+        {
+          tipo_error:       typedError.tipo,
+          mensaje_usuario:  typedError.mensajeUsuario,
+          tokens_acreditados: typedError.tokensAcreditados, // siempre 0
+          error:            typedError.message,
+        },
+        conn,
       );
+
+      // Orden pasa a FAILED — los tokens del usuario no se acreditan
       await this.repository.updateOrderStatus(orderId, ORDER_STATUS.FAILED, conn);
+
+      // Auditoría: registrar intento fallido con tipo de error diferenciado
       await this.repository.createAuditLog({
-        entityType: 'TRANSACTION', entityId: transactionId,
-        action:         AUDIT_ACTIONS.TX_STATUS_CHANGED,
+        entityType:     'TRANSACTION',
+        entityId:       transactionId,
+        action:         AUDIT_ACTIONS.TX_FALLIDA,
         previousStatus: TRANSACTION_STATUS.INITIATED,
-        newStatus:      TRANSACTION_STATUS.ERROR,
+        newStatus:      TRANSACTION_STATUS.FALLIDA,
         actorId:        userId,
-        metadata:       { error: gatewayErr.message },
+        metadata: {
+          tipo_error:         typedError.tipo,
+          mensaje_usuario:    typedError.mensajeUsuario,
+          tokens_acreditados: typedError.tokensAcreditados,
+          orderId,
+        },
       }, conn);
+
       await this.repository.commit(conn);
+
+      logger.warn('ProcessPayment: gateway error — intento fallido registrado', {
+        transactionId,
+        orderId,
+        tipo_error:      typedError.tipo,
+        mensaje_usuario: typedError.mensajeUsuario,
+      });
     } catch (e) {
       await this.repository.rollback(conn);
-      logger.error('ProcessPayment: failed to record gateway error', { error: (e as Error).message });
+      logger.error('ProcessPayment: failed to record gateway error', {
+        error: (e as Error).message,
+      });
     }
   }
 
