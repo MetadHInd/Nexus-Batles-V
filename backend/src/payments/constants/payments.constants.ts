@@ -20,6 +20,7 @@ export const TRANSACTION_STATUS = Object.freeze({
   REJECTED:   'REJECTED',
   REFUNDED:   'REFUNDED',
   ERROR:      'ERROR',
+  FALLIDA:    'FALLIDA',   // HU: Manejo de errores de pasarela — intento fallido registrado
 } as const);
 
 export const GATEWAY_NAMES = Object.freeze({
@@ -33,11 +34,34 @@ export const AUDIT_ACTIONS = Object.freeze({
   ORDER_STATUS_CHANGED: 'ORDER_STATUS_CHANGED',
   TRANSACTION_CREATED:  'TRANSACTION_CREATED',
   TX_STATUS_CHANGED:    'TX_STATUS_CHANGED',
+  TX_FALLIDA:           'TX_FALLIDA',           // HU: Manejo de errores de pasarela — intento fallido
   WEBHOOK_RECEIVED:     'WEBHOOK_RECEIVED',
   REFUND_REQUESTED:     'REFUND_REQUESTED',
   REFUND_COMPLETED:     'REFUND_COMPLETED',
   INVENTORY_ASSIGNED:   'INVENTORY_ASSIGNED',
   FRAUD_FLAG:           'FRAUD_FLAG',
+} as const);
+
+// ─── Tipos de error de pasarela (HU: Manejo de errores de pasarela de pago) ────
+// tipo_error: TIMEOUT | RECHAZO | ERROR_RED
+export const GATEWAY_ERROR_TYPES = Object.freeze({
+  TIMEOUT:   'TIMEOUT',    // La pasarela no respondió en >30 segundos
+  RECHAZO:   'RECHAZO',    // El banco / pasarela rechazó el pago (datos inválidos o fondos)
+  ERROR_RED: 'ERROR_RED',  // Error de red o conexión con la pasarela
+} as const);
+
+// Mensajes de usuario para cada tipo de error (mensaje_usuario en el modelo)
+export const GATEWAY_ERROR_MESSAGES = Object.freeze({
+  TIMEOUT:
+    'La pasarela de pago no respondió a tiempo (>30s). ' +
+    'Por favor reintente en unos minutos o contacte a soporte.',
+  RECHAZO:
+    'El pago fue rechazado. Verifique sus datos bancarios ' +
+    'o intente con otro método de pago. Si el problema persiste, contacte a soporte.',
+  ERROR_RED:
+    'Error de conexión con la pasarela de pago. ' +
+    'Verifique su conexión a internet e intente nuevamente. ' +
+    'Si el problema continúa, contacte a soporte.',
 } as const);
 
 export const PAYMENT_LIMITS = Object.freeze({
@@ -54,3 +78,4 @@ export type OrderStatus       = typeof ORDER_STATUS[keyof typeof ORDER_STATUS];
 export type TransactionStatus = typeof TRANSACTION_STATUS[keyof typeof TRANSACTION_STATUS];
 export type GatewayName       = typeof GATEWAY_NAMES[keyof typeof GATEWAY_NAMES];
 export type AuditAction       = typeof AUDIT_ACTIONS[keyof typeof AUDIT_ACTIONS];
+export type GatewayErrorType  = typeof GATEWAY_ERROR_TYPES[keyof typeof GATEWAY_ERROR_TYPES];
