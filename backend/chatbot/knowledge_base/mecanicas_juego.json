@@ -1,0 +1,94 @@
+{
+  "mecanicas": {
+    "overview": "THE NEXUS BATTLES V es un juego de cartas por turnos donde cada jugador usa un mazo de 64 cartas y un héroe para combatir.",
+    "turn_system": {
+      "description": "El juego se desarrolla por turnos con duración equitativa para todos los participantes",
+      "actions_per_turn": 1,
+      "turn_order": "Determinado aleatoriamente al inicio y se mantiene invariable hasta el fin del combate",
+      "turn_flow": [
+        "El jugador presenta su héroe al inicio",
+        "Recibe 2 cartas de su mazo",
+        "Al recibir la 3ª carta, mejora su personaje",
+        "Realiza un ataque",
+        "Puede atacar sin consumir una carta y guardarla para el siguiente turno"
+      ]
+    },
+    "game_modes": [
+      {
+        "mode": "Batalla 1v1",
+        "description": "Un jugador se enfrenta a otro jugador"
+      },
+      {
+        "mode": "JcJ grupal",
+        "description": "Dos equipos de jugadores se enfrentan, máximo 3 jugadores por equipo",
+        "max_players_per_team": 3
+      },
+      {
+        "mode": "JcE (Jugador contra Entorno)",
+        "description": "Modo Misión con desafíos específicos en entorno simulado controlado por IA"
+      },
+      {
+        "mode": "Cooperativo",
+        "description": "Tres jugadores forman equipo. No se puede dañar a compañeros de equipo salvo efectos específicos",
+        "friendly_fire": false
+      }
+    ],
+    "win_condition": "La partida concluye cuando únicamente un héroe o equipo permanece activo en el campo de batalla",
+    "hero_stats": {
+      "power": {
+        "description": "Capacidad del héroe para ejecutar acciones. Cada acción demanda un mínimo de poder.",
+        "recovery": "2 puntos por turno durante el combate, o completamente al concluir el combate",
+        "insufficient_power_penalty": "Si el héroe carece de poder, el valor de ataque se reduce a su valor base"
+      },
+      "health": {
+        "description": "Puntos de vitalidad del héroe",
+        "death_condition": "Si la vida llega a 0, el héroe muere y el juego termina"
+      },
+      "defense": {
+        "description": "Habilidad para esquivar o resistir ataques",
+        "effect": "Una defensa superior disminuye el daño recibido"
+      },
+      "attack": {
+        "description": "Probabilidad de asestar un golpe al enemigo",
+        "mechanic": "Un valor de ataque más elevado que la defensa incrementa la probabilidad de acierto"
+      },
+      "damage": {
+        "description": "Cantidad de daño infligido al enemigo con un ataque exitoso"
+      }
+    },
+    "combat_system": {
+      "attack_resolution": "Si el ataque supera la defensa del adversario, se aplica un efecto de daño mediante tabla aleatoria",
+      "no_effect_condition": "Si el ataque NO supera la defensa del enemigo, no se produce ningún efecto",
+      "random_table": {
+        "total_rows": 8000,
+        "description": "Tabla de control de 8000 filas. Se selecciona una fila con variable pseudo-aleatoria de distribución normal",
+        "possible_effects": [
+          "Causar daño (100% del daño)",
+          "Causar daño crítico (120% a 180% del daño)",
+          "Evadir el golpe (80% del daño)",
+          "Resistir el golpe (60% del daño)",
+          "Escapar al golpe (20% del daño)",
+          "No causar daño (0% del daño)"
+        ]
+      },
+      "equipment_effect_on_table": "Todo efecto que aumente porcentajes restará proporcionalmente a 'No causar daño'"
+    },
+    "credits_and_rewards": {
+      "win_1v1": 2,
+      "win_group": 4,
+      "participation": 1,
+      "chest_reward": {
+        "credits_needed": 20,
+        "description": "Al acumular 20 créditos en victorias se recibe un cofre con recompensa aleatoria",
+        "max_per_week": 2,
+        "counter_reset": "Se reinicia cada vez que completa los 20 créditos"
+      },
+      "credits_usage": ["Apostar en batallas", "Negociar en el sistema de subastas"]
+    },
+    "hero_life_bar_colors": {
+      "green": "Por encima del 60% de vida",
+      "yellow": "Entre 40% y 60% de vida",
+      "red": "Por debajo del 40% de vida"
+    }
+  }
+}
