@@ -19,8 +19,6 @@ export declare const env: {
     DEFAULT_PAYMENT_GATEWAY: "mercadopago" | "stripe" | "mock";
     CORS_ORIGIN: string;
     LOG_LEVEL: "error" | "warn" | "info" | "debug";
-    ADMIN_USERNAME: string;
-    ADMIN_PASSWORD: string;
     APP_BASE_URL?: string | undefined;
     REDIS_URL?: string | undefined;
 };

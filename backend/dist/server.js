@@ -15,6 +15,7 @@ const logger_1 = require("./infrastructure/logging/logger");
 const errorHandler_1 = require("./infrastructure/http/middlewares/errorHandler");
 // Importamos ÚNICAMENTE la función de prueba, el pool se queda en su archivo
 const connection_1 = require("./infrastructure/database/connection");
+//importarmos el heroe
 // ── Rutas v1 (núcleo / Player) ────────────────────────────────────────────────
 const authRoutes_1 = __importDefault(require("./infrastructure/http/routes/authRoutes"));
 const auctionRoutes_1 = __importDefault(require("./infrastructure/http/routes/auctionRoutes"));
@@ -23,16 +24,17 @@ const paymentRoutes_1 = __importDefault(require("./infrastructure/http/routes/pa
 const playerRoutes_1 = __importDefault(require("./infrastructure/http/routes/playerRoutes"));
 const cartRoutes_1 = __importDefault(require("./infrastructure/http/routes/cartRoutes"));
 const productRoutes_1 = __importDefault(require("./infrastructure/http/routes/productRoutes"));
+const hero_routes_1 = require("./infrastructure/http/routes/hero.routes");
 // ── Rutas con factory (Inventario + Rating + Auth v2) ─────────────────────────
 const inventory_routes_1 = require("./infrastructure/http/routes/inventory.routes");
 const rating_routes_1 = require("./infrastructure/http/routes/rating.routes");
 const auth_routes_1 = require("./infrastructure/http/routes/auth.routes");
-const adminChatbot_routes_1 = require("./infrastructure/http/routes/adminChatbot.routes");
 // ── Repositorios ──────────────────────────────────────────────────────────────
 const MySQLItemRepository_1 = require("./infrastructure/repositories/MySQLItemRepository");
 const MySQLRatingRepository_1 = require("./infrastructure/repositories/MySQLRatingRepository");
 const MySQLProductRepository_1 = require("./infrastructure/repositories/MySQLProductRepository");
 const UserRepositoryMysql_1 = require("./infrastructure/persistence/repositories/UserRepositoryMysql");
+const MySQLHeroRepository_1 = require("./infrastructure/repositories/MySQLHeroRepository");
 // ── Infraestructura de seguridad ──────────────────────────────────────────────
 const BcrypHasher_1 = require("./infrastructure/security/BcrypHasher");
 const JwtTokenServices_1 = require("./infrastructure/security/JwtTokenServices");
@@ -48,14 +50,19 @@ const LoginUser_1 = require("./application/usecases/auth/LoginUser");
 const InventoryController_1 = require("./infrastructure/http/controllers/InventoryController");
 const RatingController_1 = require("./infrastructure/http/controllers/RatingController");
 const AuthController_1 = require("./infrastructure/http/controllers/AuthController");
-const AdminChatbotController_1 = require("./infrastructure/http/controllers/AdminChatbotController");
 const RatingService_1 = require("./domain/services/RatingService");
+const HeroController_1 = require("./infrastructure/http/controllers/HeroController");
+const ObtenerHeroes_1 = require("./application/usecases/Heroes/ObtenerHeroes");
+const CrearHeroe_1 = require("./application/usecases/Heroes/CrearHeroe");
 // ============================================================
 // INYECCIÓN DE DEPENDENCIAS
 // ============================================================
 // Inventario
 const itemRepository = new MySQLItemRepository_1.MySQLItemRepository();
 const inventoryController = new InventoryController_1.InventoryController(new SearchItem_1.SearchItems(itemRepository), new GetItem_1.GetItems(itemRepository), new GetItemById_1.GetItemById(itemRepository), new DeleteItem_1.DeleteItem(itemRepository));
+//heroes
+const heroRepository = new MySQLHeroRepository_1.MySQLHeroRepository();
+const heroController = new HeroController_1.HeroController(new CrearHeroe_1.CrearHeroe(heroRepository), new ObtenerHeroes_1.ObtenerHeroes(heroRepository));
 // Rating
 const ratingRepository = new MySQLRatingRepository_1.MySQLRatingRepository();
 const productRepository = new MySQLProductRepository_1.MySQLProductRepository();
@@ -67,7 +74,6 @@ const passwordHasher = new BcrypHasher_1.BcryptHasher();
 const tokenService = new JwtTokenServices_1.JwtTokenService();
 const emailService = new EmailService_1.EmailService();
 const authControllerV2 = new AuthController_1.AuthController(new RegisterUser_1.RegisterUser(userRepository, passwordHasher, tokenService, emailService), new LoginUser_1.LoginUser(userRepository, passwordHasher, tokenService));
-const adminChatbotController = new AdminChatbotController_1.AdminChatbotController();
 // ============================================================
 // EXPRESS APP
 // ============================================================
@@ -104,8 +110,9 @@ app.use('/api/v1/products', productRoutes_1.default);
 app.use('/api/v1/inventory', inventoryLimiter, (0, inventory_routes_1.createInventoryRoutes)(inventoryController));
 app.use('/api/v1', (0, rating_routes_1.createRatingRoutes)(ratingController));
 app.use('/api/v2/auth', (0, auth_routes_1.createAuthRoutes)(authControllerV2));
-app.use('/api/admin-chatbot', (0, adminChatbot_routes_1.createAdminChatbotRoutes)(adminChatbotController));
 app.use(errorHandler_1.errorHandler);
+//heroes
+app.use('/api/v1', (0, hero_routes_1.createHeroRoutes)(heroController));
 // ============================================================
 // ARRANQUE
 // ============================================================

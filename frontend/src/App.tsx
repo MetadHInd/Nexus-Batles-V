@@ -16,6 +16,7 @@ import ItemDetailPage from '@/pages/ItemDetailPage';
 import RankingsPage from '@/pages/RankingsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ShopPage from '@/pages/ShopPage';
+import AdminPage from '@/pages/AdminPage'; // 👈 Importar AdminPage
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
@@ -89,6 +90,18 @@ export default function App() {
         <Route
           path="/shop"
           element={<ProtectedRoute><WithNavbar><ShopPage /></WithNavbar></ProtectedRoute>}
+        />
+
+        {/* 👇 Ruta de administración - PROTEGIDA y CON NAVBAR */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <WithNavbar>
+                <AdminPage />
+              </WithNavbar>
+            </ProtectedRoute>
+          }
         />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
