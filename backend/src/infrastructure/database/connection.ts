@@ -5,17 +5,15 @@ import { env } from '../../config/env';
  * Configuración del Pool de Conexiones para MySQL / TiDB Cloud
  */
 export const pool = mysql.createPool({
-  // SUSTITUYE host y port por socketPath:
-  //socketPath:        '/tmp/mysql.sock', 
-  
-  database:          env.DB_NAME || 'nexus_battles',
-  user:              env.DB_USER || 'root',
-  password:          env.DB_PASSWORD || '',
-  connectionLimit:   10,
+  host: env.DB_HOST || 'localhost',
+  port: Number(env.DB_PORT) || 3306,
+  database: env.DB_NAME || 'nexus_battles',
+  user: env.DB_USER || 'root',
+  password: env.DB_PASSWORD || '',
+  connectionLimit: 10,
   waitForConnections: true,
-  queueLimit:        0,
-  timezone:          'Z'
-  // No necesitas SSL para conexiones por socket local
+  queueLimit: 0,
+  timezone: 'Z'
 });
 
 /**

@@ -10,3 +10,27 @@ export const GetItemsQuerySchema = z.object({
   page:  z.string().default('1').transform(Number).pipe(z.number().min(1)),
   limit: z.string().default('16').transform(Number).pipe(z.number().min(1).max(100)),
 });
+
+export const CreateItemSchema = z.object({
+  nombre: z.string().min(2).max(100),
+  tipo: z.enum(['Héroe', 'Arma', 'Armadura', 'Habilidad', 'Ítem', 'Épica']),
+  rareza: z.enum(['Común', 'Rara', 'Épica', 'Legendaria']).optional(),
+  imagen: z.string().url().optional(),
+  descripcion: z.string().max(1000).optional(),
+  habilidades: z.array(z.string()).optional(),
+  efectos: z.array(z.string()).optional(),
+  ataque: z.number().int().min(0).optional(),
+  defensa: z.number().int().min(0).optional(),
+});
+
+export const UpdateItemSchema = z.object({
+  nombre: z.string().min(2).max(100).optional(),
+  tipo: z.enum(['Héroe', 'Arma', 'Armadura', 'Habilidad', 'Ítem', 'Épica']).optional(),
+  rareza: z.enum(['Común', 'Rara', 'Épica', 'Legendaria']).optional(),
+  imagen: z.string().url().optional(),
+  descripcion: z.string().max(1000).optional(),
+  habilidades: z.array(z.string()).optional(),
+  efectos: z.array(z.string()).optional(),
+  ataque: z.number().int().min(0).optional(),
+  defensa: z.number().int().min(0).optional(),
+});

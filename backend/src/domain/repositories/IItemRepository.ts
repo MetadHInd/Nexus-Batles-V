@@ -23,4 +23,6 @@ export interface IItemRepository {
   save(item: Item): Promise<Item>;
   update(item: Item): Promise<Item>;
   delete(id: string): Promise<boolean>;
+  reactivate(id: string): Promise<boolean>;
+  findByUser(userId: string, filters: ItemFilters): Promise<PaginatedResult<Item>>;
 }

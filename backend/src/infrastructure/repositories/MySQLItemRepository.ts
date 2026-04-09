@@ -190,6 +190,53 @@ export class MySQLItemRepository implements IItemRepository {
     
     return result.affectedRows > 0;
   }
+
+  async reactivate(id: string): Promise<boolean> {
+    const [result] = await pool.query<ResultSetHeader>(
+      'UPDATE items SET activo = true, deleted_at = NULL WHERE id = ? AND activo = false',
+      [id]
+    );
+    
+    return result.affectedRows > 0;
+  }
+
+  async findByUser(userId: string, filters: ItemFilters): Promise<PaginatedResult<Item>> {
+    let query = 'SELECT * FROM items WHERE activo = true AND user_id = ?';
+    let countQuery = 'SELECT COUNT(*) as total FROM items WHERE activo = true AND user_id = ?';
+    
+    const params: any[] = [userId];
+    const countParams: any[] = [userId];
+    
+    if (filters.tipo) {
+      query += ' AND tipo = ?';
+      countQuery += ' AND tipo = ?';
+      params.push(filters.tipo);
+      countParams.push(filters.tipo);
+    }
+    
+    if (filters.rareza) {
+      query += ' AND rareza = ?';
+      countQuery += ' AND rareza = ?';
+      params.push(filters.rareza);
+      countParams.push(filters.rareza);
+    }
+    
+    const limit = filters.limit || 16;
+    const page = filters.page || 1;
+    const offset = (page - 1) * limit;
+    
+    query += ' LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+    
+    const [rows] = await pool.query<ItemRow[]>(query, params);
+    const [countResult] = await pool.query<any[]>(countQuery, countParams);
+    
+    const total = countResult[0]?.total || 0;
+    const items = rows.map(row => this.mapToEntity(row));
+    const totalPages = Math.ceil(total / limit);
+    
+    return { items, total, page, totalPages };
+  }
   
   private mapToEntity(row: ItemRow): Item {
     return new Item({
