@@ -6,7 +6,7 @@ export class GetItems {
   constructor(private itemRepository: IItemRepository) {}
   
   async execute(filters: ItemFilters): Promise<PaginatedResult<Item>> {
-    console.log('🎯 Ejecutando GetItems con filtros:', filters);
+    console.log(' Ejecutando GetItems con filtros:', filters);
     const result = await this.itemRepository.findAll(filters);
     console.log('📦 Resultado:', result);
     return result;

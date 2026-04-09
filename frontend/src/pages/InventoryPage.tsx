@@ -113,9 +113,9 @@ export default function InventoryPage() {
   return (
     <div className="inventory-page">
       <header className="inventory-header">
-        <h1 className="inventory-title">🎒 MI INVENTARIO</h1>
+        <h1 className="inventory-title"> INVENTARIO</h1>
         <p className="inventory-subtitle">
-          {totalItems} {totalItems === 1 ? 'ítem' : 'ítems'} en tu colección
+          {totalItems} {totalItems === 1 ? 'ítem' : 'ítems'} en inventario
         </p>
       </header>
 

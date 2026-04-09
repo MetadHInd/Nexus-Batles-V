@@ -30,14 +30,6 @@ export const logger = winston.createLogger({
 export const audit = {
   login: (userId: string, ip: string, success: boolean) =>
     logger.info('auth.login', { userId, ip, success }),
-  auctionBid: (auctionId: string, bidderId: string, amount: number) =>
-    logger.info('auction.bid', { auctionId, bidderId, amount }),
-  paymentProcessed: (transactionId: string, playerId: string, amount: number) =>
-    logger.info('payment.processed', { transactionId, playerId, amount }),
-  missionCompleted: (missionId: string, playerId: string, reward: number) =>
-    logger.info('mission.completed', { missionId, playerId, reward }),
-  rankChange: (playerId: string, oldRank: number, newRank: number) =>
-    logger.info('player.rankChange', { playerId, oldRank, newRank }),
   securityHmacFail: (ip: string, route: string) =>
     logger.warn('security.hmacFail', { ip, route, severity: 'HIGH' }),
   rateLimitHit: (ip: string, route: string) =>

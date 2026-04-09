@@ -1,9 +1,8 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { env } from '../../config/env';
-import { ITokenService } from '../../application/usecases/auth/RegisterUser';
 
-export class JwtTokenService implements ITokenService {
-generate(payload: any): string {
+export class JwtTokenService {
+  generate(payload: any): string {
   const options: SignOptions = {
     expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'],
   };
