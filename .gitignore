@@ -1,9 +1,22 @@
-.env
-.pytest_cache/
-__pycache__/
-*.pyc
+# Dependencias
+node_modules/
 frontend/node_modules/
-venv/
+backend/node_modules/
+
+# Python
 __pycache__/
 *.pyc
-backend/node_modules/
+.pytest_cache/
+venv/
+
+# Entorno
+.env
+
+# Builds
+dist/
+build/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
