@@ -47,3 +47,23 @@ reports/
 *.seed
 *.out
 *.err
+frontend/node_modules/
+backend/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+
+# Entorno
+.env
+
+# Builds
+dist/
+build/
+*.log
+
+# OS
+.DS_Store
+Thumbs.dbnode_modules/
