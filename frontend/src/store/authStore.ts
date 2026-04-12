@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AuthTokens, PublicPlayer } from '@/types';
+import type { AuthTokens } from '@/types';
 import { authApi } from '@/api/auth';
 
 interface AuthState {
@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
           'player' in payload;
 
         if (looksLikeTokens) {
-          const tokens = payload as AuthTokens;
+          const tokens = payload;
           localStorage.setItem('accessToken', tokens.accessToken);
           set({
             isAuthenticated: true,
@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Compat: si solo recibimos el jugador, igual lo guardamos.
-        const p = payload as AuthTokens['player'];
+        const p = payload;
         set({
           isAuthenticated: true,
           user: p,
