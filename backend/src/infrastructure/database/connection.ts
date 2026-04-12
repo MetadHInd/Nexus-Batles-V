@@ -7,10 +7,11 @@ import { env } from '../../config/env';
 export const pool = mysql.createPool({
   // SUSTITUYE host y port por socketPath:
   //socketPath:        '/tmp/mysql.sock', 
-  
+  host:              env.DB_HOST || '127.0.0.1',
+  port:              env.DB_PORT || 3306,
   database:          env.DB_NAME || 'nexus_battles',
   user:              env.DB_USER || 'root',
-  password:          env.DB_PASSWORD || '',
+  password:          env.DB_PASSWORD || 'Rias1002$',
   connectionLimit:   10,
   waitForConnections: true,
   queueLimit:        0,

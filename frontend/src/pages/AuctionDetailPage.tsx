@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { auctionsApi } from '@/api/auctions';
 import { getErrorMessage } from '@/api/client';
@@ -26,6 +26,26 @@ function formatEnds(iso: string) {
   return d.toLocaleString();
 }
 
+function getDemoAuction(id: string): Auction {
+  const n = Number(id.replace('mock-', '')) || 1;
+  const now = Date.now();
+  const rarity: ItemRarity = (['LEGENDARY', 'EPIC', 'RARE', 'COMMON'] as ItemRarity[])[n % 4];
+  const status: AuctionStatus = (['ACTIVE', 'CLOSED', 'CANCELLED'] as AuctionStatus[])[n % 3];
+  return {
+    id,
+    itemId: `item-${n}`,
+    itemName: ['Espada del Alba', 'Manto Arcano', 'Escudo de Escarcha', 'Daga Sombría'][n % 4],
+    rarity,
+    startingPrice: 100 + n * 15,
+    currentPrice: 140 + n * 25,
+    currentWinnerId: n % 2 === 0 ? 'player-x' : null,
+    status,
+    endsAt: new Date(now + (n + 1) * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(now - (n + 2) * 60 * 60 * 1000).toISOString(),
+    bids: [],
+  };
+}
+
 export default function AuctionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -47,24 +67,7 @@ export default function AuctionDetailPage() {
     // Si navegamos desde el modo demo (cuando el back devuelve 501), evitamos
     // un fetch que fallará y mostramos un detalle básico.
     if (id.startsWith('mock-')) {
-      const n = Number(id.replace('mock-', '')) || 1;
-      const now = Date.now();
-      const rarity: ItemRarity = (['LEGENDARY', 'EPIC', 'RARE', 'COMMON'] as ItemRarity[])[n % 4];
-      const status: AuctionStatus = (['ACTIVE', 'CLOSED', 'CANCELLED'] as AuctionStatus[])[n % 3];
-      const demo: Auction = {
-        id,
-        itemId: `item-${n}`,
-        itemName: ['Espada del Alba', 'Manto Arcano', 'Escudo de Escarcha', 'Daga Sombría'][n % 4],
-        rarity,
-        startingPrice: 100 + n * 15,
-        currentPrice: 140 + n * 25,
-        currentWinnerId: n % 2 === 0 ? 'player-x' : null,
-        status,
-        endsAt: new Date(now + (n + 1) * 60 * 60 * 1000).toISOString(),
-        createdAt: new Date(now - (n + 2) * 60 * 60 * 1000).toISOString(),
-        bids: [],
-      };
-      setAuction(demo);
+      setAuction(getDemoAuction(id));
       setLoading(false);
       return () => { alive = false; };
     }
@@ -90,7 +93,12 @@ export default function AuctionDetailPage() {
 
   const canBid = !!auction && auction.status === 'ACTIVE';
 
-  const submitBid = async () => {
+  const isLoading = loading;
+  const hasError = error || !auction;
+  const showErrorState = !isLoading && hasError;
+  const showLoadingState = isLoading;
+
+  const submitBid = useCallback(async () => {
     if (!auction || !id) return;
     const amount = Number(bid);
     if (!Number.isFinite(amount) || amount <= 0) {
@@ -114,7 +122,7 @@ export default function AuctionDetailPage() {
     } finally {
       setPlacing(false);
     }
-  };
+  }, [auction, id, bid, player]);
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '1.5rem 1rem 2.5rem' }}>
@@ -135,11 +143,12 @@ export default function AuctionDetailPage() {
         </Link>
       </div>
 
-      {loading ? (
+      {showLoadingState ? (
         <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--gold)', fontFamily: 'var(--font-heading)', letterSpacing: '0.35em', opacity: 0.85 }}>
           ⚜ Consultando pergaminos de subasta...
         </div>
-      ) : error || !auction ? (
+      ) : null}
+      {showErrorState ? (
         <div style={{
           border: '1px solid rgba(200,134,10,0.25)',
           background: 'rgba(0,0,0,0.22)',
@@ -151,7 +160,8 @@ export default function AuctionDetailPage() {
         }}>
           ⚠️ {error || 'Subasta no encontrada'}
         </div>
-      ) : (
+      ) : null}
+      {auction ? (
         <>
           <div style={{
             border: '1px solid rgba(200,134,10,0.18)',
@@ -180,7 +190,7 @@ export default function AuctionDetailPage() {
                 }}>
                   {auction.rarity}
                 </div>
-                <span className={`nbv-badge nbv-badge-${auction.status === 'ACTIVE' ? 'gold' : auction.status === 'CLOSED' ? 'emerald' : 'crimson'}`}>
+                <span className={`nbv-badge nbv-badge-${auction.status === 'ACTIVE' ? 'gold' : 'emerald'}`} title={auction.status}>
                   {statusLabel(auction.status)}
                 </span>
               </div>
@@ -207,7 +217,7 @@ export default function AuctionDetailPage() {
                   <div style={{ color: 'var(--gold)', fontFamily: 'var(--font-heading)', letterSpacing: '.15em', marginBottom: '.5rem' }}>
                     Historial de pujas
                   </div>
-                  {auction.bids?.length ? (
+                  {auction.bids.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '.45rem' }}>
                       {auction.bids.slice(0, 8).map((b) => (
                         <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '.75rem', fontSize: '.88rem', color: 'var(--parchment-dim)' }}>
@@ -243,11 +253,11 @@ export default function AuctionDetailPage() {
                     style={{ width: '100%', clipPath: 'none', borderRadius: 14 }}
                     onClick={submitBid}
                     disabled={!canBid || placing || !player}
-                    title={!player ? 'Inicia sesión para pujar' : undefined}
+                    title={player ? undefined : 'Inicia sesión para pujar'}
                   >
                     {placing ? '⏳ Pujando...' : '⚔ Pujar'}
                   </button>
-                  {!canBid && (
+                  {canBid ? null : (
                     <div style={{ marginTop: '.6rem', color: 'var(--parchment-dim)', fontStyle: 'italic', fontSize: '.85rem' }}>
                       Esta subasta no acepta pujas.
                     </div>
@@ -282,7 +292,7 @@ export default function AuctionDetailPage() {
             </div>
           )}
         </>
-      )}
+      ) : null}
     </div>
   );
 }

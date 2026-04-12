@@ -75,7 +75,7 @@ class AuthControllerLegacy {
         data: {
           accessToken,
           refreshToken,
-          user: {
+          player: {
             id: user.id,
             email: user.email,
             apodo: user.apodo,

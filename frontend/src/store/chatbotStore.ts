@@ -46,7 +46,7 @@ export const useChatbotStore = create<ChatbotState>()(
       toggle: () =>
         set((s) => ({
           isOpen: !s.isOpen,
-          unreadCount: !s.isOpen ? 0 : s.unreadCount,
+          unreadCount: s.isOpen ? s.unreadCount : 0,
         })),
 
       clearHistory: () => set({ messages: [], unreadCount: 0, isTyping: false }),

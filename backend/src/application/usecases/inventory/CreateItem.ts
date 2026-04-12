@@ -12,6 +12,7 @@ interface CreateItemDTO {
   efectos?: string[];
   ataque?: number;
   defensa?: number;
+  userId?: string;
 }
 
 export class CreateItem {
@@ -29,7 +30,7 @@ export class CreateItem {
       efectos: data.efectos || [],
       ataque: data.ataque || 0,
       defensa: data.defensa || 0,
-      userId: undefined, // Item global, no pertenece a nadie
+      userId: data.userId,
       activo: true,
     });
 
