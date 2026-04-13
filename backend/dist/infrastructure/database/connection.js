@@ -15,7 +15,7 @@ exports.pool = promise_1.default.createPool({
     //socketPath:        '/tmp/mysql.sock', 
     database: env_1.env.DB_NAME || 'nexus_battles',
     user: env_1.env.DB_USER || 'root',
-    password: env_1.env.DB_PASSWORD || '',
+    password: env_1.env.DB_PASSWORD || 'Caren200505',
     connectionLimit: 10,
     waitForConnections: true,
     queueLimit: 0,

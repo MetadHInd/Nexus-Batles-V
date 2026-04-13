@@ -10,6 +10,7 @@ export declare class AdminChatbotController {
     updateKnowledgeBaseEntry: (req: AdminChatbotRequest, res: Response, next: NextFunction) => Promise<void>;
     deleteKnowledgeBaseEntry: (req: AdminChatbotRequest, res: Response, next: NextFunction) => Promise<void>;
     getLogs: (_req: Request, res: Response, next: NextFunction) => Promise<void>;
+    getBackups: (_req: Request, res: Response, next: NextFunction) => Promise<void>;
     private normalizeCategory;
     private getFileNameByCategory;
     private getCategoryFilePath;
