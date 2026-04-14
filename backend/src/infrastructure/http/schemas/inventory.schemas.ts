@@ -21,6 +21,7 @@ export const CreateItemSchema = z.object({
   efectos: z.array(z.string()).optional(),
   ataque: z.number().int().min(0).optional(),
   defensa: z.number().int().min(0).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 export const UpdateItemSchema = z.object({

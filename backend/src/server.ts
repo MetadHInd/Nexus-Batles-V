@@ -18,8 +18,13 @@ import authRoutes    from './infrastructure/http/routes/authRoutes';
 // ── Rutas con factory (Inventario) ─────────────────────────
 import { createInventoryRoutes } from './infrastructure/http/routes/inventory.routes';
 
+// ── Rutas con factory (Rating) ───────────────────────────────
+import { createRatingRoutes } from './infrastructure/http/routes/rating.routes';
+
 // ── Repositorios ──────────────────────────────────────────────────────────────
 import { MySQLItemRepository }    from './infrastructure/repositories/MySQLItemRepository';
+import { MySQLRatingRepository }  from './infrastructure/repositories/MySQLRatingRepository';
+import { MySQLProductRepository } from './infrastructure/repositories/MySQLProductRepository';
 
 // ── Use Cases ─────────────────────────────────────────────────────────────────
 import { SearchItems }       from './application/usecases/inventory/SearchItem';
@@ -34,6 +39,10 @@ import { GetUserInventory }  from './application/usecases/inventory/GetUserInven
 
 // ── Controladores con DI ──────────────────────────────────────────────────────
 import { InventoryController } from './infrastructure/http/controllers/InventoryController';
+import { RatingController } from './infrastructure/http/controllers/RatingController';
+
+// ── Servicios ──────────────────────────────────────────────────────────────────
+import { RatingService } from './domain/services/RatingService';
 
 // ============================================================
 // INYECCIÓN DE DEPENDENCIAS
@@ -52,6 +61,12 @@ const inventoryController = new InventoryController(
   new ReactivateItem(itemRepository),
   new GetUserInventory(itemRepository),
 );
+
+// Rating
+const ratingRepository   = new MySQLRatingRepository();
+const productRepository  = new MySQLProductRepository();
+const ratingService      = new RatingService(ratingRepository, productRepository);
+const ratingController   = new RatingController(ratingService);
 
 // Auth helpers
 // ============================================================
@@ -86,6 +101,7 @@ app.get('/health', (_req, res) => res.json({
 // ============================================================
 app.use('/api/v1/auth',     authRoutes);
 app.use('/api/v1/inventory', inventoryLimiter, createInventoryRoutes(inventoryController));
+app.use('/api/v1/products', createRatingRoutes(ratingController));
 
 app.use(errorHandler);
 

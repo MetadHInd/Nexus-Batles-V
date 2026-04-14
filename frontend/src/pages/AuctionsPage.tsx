@@ -95,6 +95,130 @@ export default function AuctionsPage() {
     return items.filter(a => a.status === status);
   }, [items, status]);
 
+  const renderAuctionsContent = () => {
+    if (loading) {
+      return (
+        <div style={{
+          textAlign: 'center',
+          padding: '2.5rem 1rem',
+          color: 'var(--gold)',
+          fontFamily: 'var(--font-heading)',
+          letterSpacing: '0.35em',
+          opacity: 0.85,
+        }}>
+          ⚜ Cargando subastas...
+        </div>
+      );
+    }
+    if (filtered.length === 0) {
+      return (
+        <div style={{
+          border: '1px solid rgba(200,134,10,0.25)',
+          background: 'rgba(0,0,0,0.22)',
+          padding: '1.25rem',
+          borderRadius: 14,
+          textAlign: 'center',
+          color: 'var(--parchment-dim)',
+          fontStyle: 'italic',
+        }}>
+          No hay subastas para este filtro.
+        </div>
+      );
+    }
+    return (
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '0.9rem',
+      }}>
+        {filtered.map((a) => (
+          <Link
+            key={a.id}
+            to={`/auctions/${a.id}`}
+            style={{
+              textDecoration: 'none',
+              color: 'inherit',
+              border: '1px solid rgba(200,134,10,0.18)',
+              background: 'linear-gradient(145deg, rgba(28,21,16,0.9), rgba(18,14,10,0.9))',
+              borderRadius: 16,
+              padding: '1rem',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: `radial-gradient(800px 180px at 0% 0%, ${rarityColor(a.rarity)}22, transparent 55%)`,
+              pointerEvents: 'none',
+            }} />
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '.75rem', alignItems: 'baseline' }}>
+                <div style={{
+                  fontFamily: 'var(--font-heading)',
+                  letterSpacing: '0.08em',
+                  color: rarityColor(a.rarity),
+                  fontSize: '0.75rem',
+                  textTransform: 'uppercase',
+                  opacity: 0.95,
+                }}>
+                  {a.rarity}
+                </div>
+                <span className={`nbv-badge nbv-badge-${statusTone(a.status)}`}>
+                  {statusLabel(a.status)}
+                </span>
+              </div>
+              <div style={{
+                marginTop: '.55rem',
+                fontFamily: 'var(--font-title)',
+                color: 'var(--gold)',
+                fontSize: '1.05rem',
+                lineHeight: 1.2,
+              }}>
+                {a.itemName}
+              </div>
+              <div style={{ marginTop: '.6rem', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '.6rem' }}>
+                <div style={{
+                  border: '1px solid rgba(200,134,10,0.12)',
+                  background: 'rgba(0,0,0,0.18)',
+                  borderRadius: 14,
+                  padding: '.6rem .75rem',
+                }}>
+                  <div style={{ fontSize: '.7rem', letterSpacing: '.18em', opacity: .75 }}>PRECIO</div>
+                  <div style={{ fontWeight: 900, color: 'var(--parchment)' }}>
+                    ✦ {a.currentPrice.toLocaleString()}
+                  </div>
+                </div>
+                <div style={{
+                  border: '1px solid rgba(200,134,10,0.12)',
+                  background: 'rgba(0,0,0,0.18)',
+                  borderRadius: 14,
+                  padding: '.6rem .75rem',
+                }}>
+                  <div style={{ fontSize: '.7rem', letterSpacing: '.18em', opacity: .75 }}>CIERRA</div>
+                  <div style={{ fontSize: '.82rem', color: 'var(--parchment)' }}>
+                    {formatEnds(a.endsAt)}
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                marginTop: '.75rem',
+                fontSize: '.82rem',
+                color: 'var(--parchment-dim)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                opacity: 0.95,
+              }}>
+                <span>Pujas: {a.bids?.length ?? 0}</span>
+                <span style={{ color: 'var(--gold)' }}>Ver detalles →</span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div style={{
       maxWidth: 1200,
@@ -190,7 +314,7 @@ export default function AuctionsPage() {
       ) : (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '0.9rem',
         }}>
           {filtered.map((a) => (
@@ -314,3 +438,4 @@ export default function AuctionsPage() {
     </div>
   );
 }
+

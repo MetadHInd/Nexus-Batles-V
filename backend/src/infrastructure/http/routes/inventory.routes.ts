@@ -29,8 +29,9 @@ export const createInventoryRoutes = (controller: InventoryController): Router =
   router.patch('/:id/delete', authenticateJWT, requireRole(['ADMIN']), controller.softDelete);
   router.patch('/:id/reactivate', authenticateJWT, requireRole(['ADMIN']), controller.reactivate);
 
-  // ========== COMPATIBILIDAD CON RUTAS LEGACY ==========
-  router.delete('/:id', authenticateJWT, controller.delete);
+  // ========== HARD DELETE (SOLO ADMIN) ==========
+  // ⚠️ CRÍTICO: Agregado requireRole(['ADMIN']) para proteger hard delete
+  router.delete('/:id', authenticateJWT, requireRole(['ADMIN']), controller.delete);
 
   return router;
 };

@@ -9,10 +9,10 @@ import type { ShopProduct, BuyerInfo } from '../../api/payments';
 import type { PaymentState }           from '../../hooks/usePayment';
 
 interface CheckoutModalProps {
-  product:       ShopProduct;
-  paymentState:  PaymentState;
-  onConfirm:     (buyerInfo: BuyerInfo, countryCode: string, promoCode?: string) => void;
-  onClose:       () => void;
+  readonly product:       ShopProduct;
+  readonly paymentState:  PaymentState;
+  readonly onConfirm:     (buyerInfo: BuyerInfo, countryCode: string, promoCode?: string) => void;
+  readonly onClose:       () => void;
 }
 
 const COUNTRIES = [

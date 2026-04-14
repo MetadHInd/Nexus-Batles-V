@@ -5,18 +5,18 @@ import './Navbar.css';
 const navLinks = [
   { path: '/dashboard', label: '⚔ Batalla', icon: '⚔' },
   { path: '/missions', label: '🗡 Misiones', icon: '🗡' },
-  // Mercado → vista principal: Tienda
   { path: '/shop', label: '🏛 Mercado', icon: '🏛' },
-  // Vista secundaria: Subastas
   { path: '/auctions', label: '⚔ Subastas', icon: '⚔' },
-  { path: '/inventory', label: '🎒 Inventario', icon: '🎒' },
+  { path: '/inventory', label: '📜 Inventario Global', icon: '📜' },
+  { path: '/my-inventory', label: '🎒 Mi Inventario', icon: '🎒' },
   { path: '/rankings', label: '🏆 Rankings', icon: '🏆' },
 ];
 
 export default function Navbar() {
   const location = useLocation();
   const { user } = useAuthStore();
-  const initial = (user as any)?.username?.charAt(0) || (user as any)?.apodo?.charAt(0) || 'U';
+  const rol = (user as any)?.rol;
+  const initial = (user as any)?.apodo?.charAt(0) || (user as any)?.username?.charAt(0) || 'U';
 
   return (
     <nav className="nexus-nav">
@@ -35,13 +35,22 @@ export default function Navbar() {
               {link.icon} {link.label}
             </Link>
           ))}
+          {rol === 'ADMIN' && (
+            <Link
+              to="/create-item"
+              className={`nav-link ${location.pathname === '/create-item' ? 'active' : ''}`}
+              style={{ color: 'var(--color-gold, #f0c040)' }}
+            >
+              ✨ Crear Carta
+            </Link>
+          )}
         </div>
 
         <div className="nav-right">
           <div className="nav-coins">
             ✦ 4,820 monedas
           </div>
-          <div className="nav-avatar">
+          <div className="nav-avatar" title={(user as any)?.apodo || ''}>
             {initial}
           </div>
         </div>
