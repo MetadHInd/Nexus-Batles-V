@@ -1,7 +1,7 @@
 // src/infrastructure/http/routes/hero.routes.ts
 import { Router } from "express";
 import { HeroController } from "../controllers/HeroController";
-import { upload } from "../middlewares/upload";
+import { upload } from "../../middlewares/upload";
 
 export function createHeroRoutes(heroController: HeroController): Router {
   const router = Router();
