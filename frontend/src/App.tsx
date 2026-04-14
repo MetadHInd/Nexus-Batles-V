@@ -1,3 +1,4 @@
+// src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 
@@ -16,7 +17,9 @@ import ItemDetailPage from '@/pages/ItemDetailPage';
 import RankingsPage from '@/pages/RankingsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ShopPage from '@/pages/ShopPage';
-import AdminPage from '@/pages/AdminPage'; // 👈 Importar AdminPage
+import AdminPage from '@/pages/AdminPage';
+import AdminProductsPage from '@/pages/AdminProductsPage'; // ✅ Agregar
+import HomePage from '@/pages/HomePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
@@ -46,8 +49,10 @@ export default function App() {
       </div>
 
       <Routes>
+        {/* Ruta pública principal - HomePage */}
+        <Route path="/" element={<HomePage />} />
+        
         {/* Rutas públicas — sin Navbar */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
 
@@ -68,8 +73,6 @@ export default function App() {
           path="/missions"
           element={<ProtectedRoute><WithNavbar><MissionsPage /></WithNavbar></ProtectedRoute>}
         />
-
-        {/* Inventario — branch 4: lista + detalle con Rating */}
         <Route
           path="/inventory"
           element={<ProtectedRoute><WithNavbar><InventoryPage /></WithNavbar></ProtectedRoute>}
@@ -78,7 +81,6 @@ export default function App() {
           path="/inventory/:id"
           element={<ProtectedRoute><WithNavbar><ItemDetailPage /></WithNavbar></ProtectedRoute>}
         />
-
         <Route
           path="/rankings"
           element={<ProtectedRoute><WithNavbar><RankingsPage /></WithNavbar></ProtectedRoute>}
@@ -92,7 +94,7 @@ export default function App() {
           element={<ProtectedRoute><WithNavbar><ShopPage /></WithNavbar></ProtectedRoute>}
         />
 
-        {/* 👇 Ruta de administración - PROTEGIDA y CON NAVBAR */}
+        {/* Ruta de administración de Héroes */}
         <Route
           path="/admin"
           element={
@@ -104,7 +106,20 @@ export default function App() {
           }
         />
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* ✅ Ruta de administración de Productos Premium */}
+        <Route
+          path="/admin/products"
+          element={
+            <ProtectedRoute>
+              <WithNavbar>
+                <AdminProductsPage />
+              </WithNavbar>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 - Redirigir a HomePage */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

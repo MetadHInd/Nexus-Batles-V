@@ -1,67 +1,126 @@
-/**
- * ProductsController.ts + productRoutes.ts (archivo combinado)
- *
- * PROBLEMA DETECTADO EN FASE 1:
- *   paymentsApi.getShopProducts() llama a GET /products?shop=true
- *   pero esta ruta NO EXISTÍA en server.ts → 404 en producción.
- *   ShopPage usaba MOCK_PRODUCTS como fallback silencioso.
- *
- * SOLUCIÓN:
- *   Este archivo crea el Controller + Route del catálogo de productos.
- *   Agregar en server.ts:
- *     import productRoutes from '@infrastructure/http/routes/productRoutes';
- *     app.use('/api/v1/products', productRoutes);
- */
+// backend/src/infrastructure/http/controllers/ProductsController.ts
+import { Request, Response } from "express";
+import { MySQLProductRepository } from "../../repositories/MySQLProductRepository";
 
-// ── Controller ────────────────────────────────────────────────────────────────
+const productRepository = new MySQLProductRepository();
 
-import { Request, Response, NextFunction } from 'express';
-import { pool } from '../../database/connection';
-
-class ProductsController {
-
-  // GET /api/v1/products?shop=true → todos los productos activos con stock
-  async getProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
+export class ProductsController {
+  
+  async listar(req: Request, res: Response) {
     try {
-      const shopOnly = req.query.shop === 'true';
-
-      const query = shopOnly
-        ? `SELECT id as product_id, name, description, ROUND(price * 100) as price_cents,
-                  'USD' as currency, stock as available_stock, 1 as is_active,
-                  JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.rarity')) as rarity,
-                  JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.type'))   as type,
-                  JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.emoji'))  as emoji
-           FROM products
-           WHERE stock > 0
-           ORDER BY FIELD(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.rarity')),
-                          'LEGENDARY','EPIC','RARE','COMMON')`
-        : `SELECT id as product_id, name, description, ROUND(price * 100) as price_cents,
-                  'USD' as currency, stock as available_stock, 1 as is_active
-           FROM products
-           ORDER BY id DESC`;
-
-      const [rows]: any = await pool.execute(query);
-
-      res.json({ success: true, data: rows });
-    } catch (err) { next(err); }
+      const products = await productRepository.findAll();
+      res.json({
+        success: true,
+        count: products.length,
+        products: products.map(p => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          price: p.price,
+          stock: p.stock,
+          rarity: p.rarity,
+          type: p.type,
+          emoji: p.emoji,
+          image: p.image
+        }))
+      });
+    } catch (error: any) {
+      console.error("Error:", error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
   }
 
-  // GET /api/v1/products/:id
-  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async crear(req: Request, res: Response) {
     try {
-      const [rows]: any = await pool.execute(
-        `SELECT id as product_id, name, description, ROUND(price * 100) as price_cents,
-                'USD' as currency, stock as available_stock
-         FROM products WHERE id = ? LIMIT 1`,
-        [req.params.id]
-      );
-      if (!rows.length) {
-        res.status(404).json({ success: false, error: 'PRODUCT_NOT_FOUND' });
-        return;
-      }
-      res.json({ success: true, data: rows[0] });
-    } catch (err) { next(err); }
+      const { name, description, price, stock, rarity, type, emoji, image } = req.body;
+      
+      console.log("📦 Creando producto:", { name, description, price, rarity, type });
+      
+      const productData = {
+        name,
+        description,
+        price: parseFloat(price),
+        stock: parseInt(stock) || 0,
+        rarity: rarity || 'COMMON',
+        type: type || 'ITEM',
+        emoji: emoji || '📦',
+        is_active: true,
+        image: image || ''
+      };
+      
+      const product = await productRepository.create(productData);
+      
+      res.status(201).json({
+        success: true,
+        message: `✅ Producto "${name}" creado`,
+        product: {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          stock: product.stock,
+          rarity: product.rarity,
+          type: product.type,
+          emoji: product.emoji,
+          image: product.image
+        }
+      });
+    } catch (error: any) {
+      console.error("❌ Error:", error.message);
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  // ✅ AGREGAR MÉTODO ACTUALIZAR
+  async actualizar(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { name, description, price, stock, rarity, type, emoji, image } = req.body;
+      
+      console.log("✏️ Actualizando producto ID:", id);
+      
+      const productData = {
+        name,
+        description,
+        price: parseFloat(price),
+        stock: parseInt(stock) || 0,
+        rarity: rarity || 'COMMON',
+        type: type || 'ITEM',
+        emoji: emoji || '📦',
+        image: image || ''
+      };
+      
+      const product = await productRepository.update(parseInt(id), productData);
+      
+      res.json({
+        success: true,
+        message: `✅ Producto "${name}" actualizado`,
+        product: {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          stock: product.stock,
+          rarity: product.rarity,
+          type: product.type,
+          emoji: product.emoji,
+          image: product.image
+        }
+      });
+    } catch (error: any) {
+      console.error("❌ Error:", error.message);
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  async eliminar(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      await productRepository.delete(parseInt(id));
+      res.json({ success: true, message: "✅ Producto eliminado" });
+    } catch (error: any) {
+      console.error("❌ Error:", error.message);
+      res.status(400).json({ success: false, error: error.message });
+    }
   }
 }
-
-export const productsController = new ProductsController();
