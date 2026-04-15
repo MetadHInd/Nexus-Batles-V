@@ -99,5 +99,10 @@ export interface ApiError {
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-  player: Pick<PublicPlayer, 'id' | 'username' | 'role'>;
+  player: {
+    id: string;
+    email: string;
+    apodo: string;
+    rol: 'PLAYER' | 'ADMIN' | 'MODERATOR';
+  };
 }

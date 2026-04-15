@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
 import { inventoryApi, Item } from '@/api/inventory';
 import { ratingsApi } from '@/api/ratings';
 import RatingStars from '@/components/RatingStars';
@@ -25,6 +26,7 @@ const extractNumberFromId = (id: string): number => {
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,6 +116,10 @@ export default function ItemDetailPage() {
       default: return '❓';
     }
   };
+
+  // 🔧 CRÍTICO: Verificar si el usuario actual es ADMIN (puede eliminar items)
+  const userRol = (user as any)?.rol;
+  const canDelete = userRol === 'ADMIN';
 
   if (loading) {
     return (
@@ -226,13 +232,22 @@ export default function ItemDetailPage() {
             </div>
           )}
 
-          <button
-            className="delete-button"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? '🗑️ Eliminando...' : '🗑️ Eliminar Ítem'}
-          </button>
+          {/* 🔧 CRÍTICO: Mostrar botón DELETE solo si es ADMIN */}
+          {canDelete && (
+            <button
+              className="delete-button"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? '🗑️ Eliminando...' : '🗑️ Eliminar Ítem'}
+            </button>
+          )}
+          
+          {!canDelete && (
+            <div style={{ padding: '1rem', color: 'var(--color-rune-gray)', textAlign: 'center', fontSize: '0.9em', marginTop: '1rem' }}>
+              💡 Solo los administradores pueden eliminar items
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -13,6 +13,8 @@ import AuctionsPage from '@/pages/AuctionsPage';
 import AuctionDetailPage from '@/pages/AuctionDetailPage';
 import MissionsPage from '@/pages/MissionsPage';
 import InventoryPage from '@/pages/InventoryPage';
+import MyInventoryPage from '@/pages/MyInventoryPage';
+import CreateItemPage from '@/pages/CreateItemPage';
 import ItemDetailPage from '@/pages/ItemDetailPage';
 import RankingsPage from '@/pages/RankingsPage';
 import ProfilePage from '@/pages/ProfilePage';
@@ -73,6 +75,8 @@ export default function App() {
           path="/missions"
           element={<ProtectedRoute><WithNavbar><MissionsPage /></WithNavbar></ProtectedRoute>}
         />
+
+        {/* Inventario global */}
         <Route
           path="/inventory"
           element={<ProtectedRoute><WithNavbar><InventoryPage /></WithNavbar></ProtectedRoute>}
@@ -81,6 +85,17 @@ export default function App() {
           path="/inventory/:id"
           element={<ProtectedRoute><WithNavbar><ItemDetailPage /></WithNavbar></ProtectedRoute>}
         />
+        {/* Inventario personal del jugador */}
+        <Route
+          path="/my-inventory"
+          element={<ProtectedRoute><WithNavbar><MyInventoryPage /></WithNavbar></ProtectedRoute>}
+        />
+        {/* Crear carta — solo ADMIN */}
+        <Route
+          path="/create-item"
+          element={<ProtectedRoute><WithNavbar><CreateItemPage /></WithNavbar></ProtectedRoute>}
+        />
+
         <Route
           path="/rankings"
           element={<ProtectedRoute><WithNavbar><RankingsPage /></WithNavbar></ProtectedRoute>}

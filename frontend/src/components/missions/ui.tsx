@@ -94,7 +94,7 @@ export const Badge = ({ children, color = 'gold', style = {} }: BadgeProps) => (
 );
 
 // ── Toast ──────────────────────────────────────────────────────
-import type { Toast } from '../hooks/useMissions.ts';
+import type { Toast } from '../../hooks/useMissions';
 
 const TOAST_STYLE: Record<Toast['type'], CSSProperties> = {
   success: { background:'rgba(26,140,69,0.12)',  borderLeftColor:'var(--emerald-bright)' },

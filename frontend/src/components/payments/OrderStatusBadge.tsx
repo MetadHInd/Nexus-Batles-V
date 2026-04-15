@@ -16,8 +16,8 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: str
 };
 
 interface Props {
-  status: OrderStatus;
-  size?:  'sm' | 'md';
+  readonly status: OrderStatus;
+  readonly size?:  'sm' | 'md';
 }
 
 export function OrderStatusBadge({ status, size = 'md' }: Props) {

@@ -8,9 +8,9 @@ import React from 'react';
 import type { ShopProduct } from '../../api/payments';
 
 interface ProductCardProps {
-  product:   ShopProduct;
-  onSelect:  (product: ShopProduct) => void;
-  disabled?: boolean;
+  readonly product:   ShopProduct;
+  readonly onSelect:  (product: ShopProduct) => void;
+  readonly disabled?: boolean;
 }
 
 const RARITY_CONFIG = {
@@ -29,7 +29,7 @@ export function ProductCard({ product, onSelect, disabled }: ProductCardProps) {
   const isDisabled = disabled || outOfStock;
 
   return (
-    <div
+    <button
       style={{
         background: `linear-gradient(145deg, var(--color-stone), var(--color-stone-dark))`,
         border:     `1px solid ${cfg.border}`,
@@ -39,9 +39,12 @@ export function ProductCard({ product, onSelect, disabled }: ProductCardProps) {
         transition: 'transform 0.2s, box-shadow 0.2s',
         cursor:     isDisabled ? 'not-allowed' : 'pointer',
         opacity:    isDisabled ? 0.6 : 1,
+        display:    'block',
+        width:      '100%',
       }}
       className="product-card"
       onClick={() => !isDisabled && onSelect(product)}
+      disabled={isDisabled}
     >
       {/* Corner decoration */}
       <span style={{ position: 'absolute', top: '0.6rem', left: '0.6rem', color: 'var(--color-gold-dark)', fontSize: '0.7rem', opacity: 0.5 }}>✦</span>
@@ -165,11 +168,15 @@ export function ProductCard({ product, onSelect, disabled }: ProductCardProps) {
       </div>
 
       <style>{`
-        .product-card:hover:not([style*="not-allowed"]) {
+        .product-card:hover:not(:disabled) {
           transform: translateY(-3px);
           box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 25px ${cfg.glow} !important;
         }
+        .product-card:focus-visible {
+          outline: 2px solid ${cfg.color};
+          outline-offset: 2px;
+        }
       `}</style>
-    </div>
+    </button>
   );
 }

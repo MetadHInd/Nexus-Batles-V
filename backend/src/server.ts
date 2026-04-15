@@ -18,8 +18,13 @@ import authRoutes    from './infrastructure/http/routes/authRoutes';
 // ── Rutas con factory (Inventario) ─────────────────────────
 import { createInventoryRoutes } from './infrastructure/http/routes/inventory.routes';
 
+// ── Rutas con factory (Rating) ───────────────────────────────
+import { createRatingRoutes } from './infrastructure/http/routes/rating.routes';
+
 // ── Repositorios ──────────────────────────────────────────────────────────────
 import { MySQLItemRepository }    from './infrastructure/repositories/MySQLItemRepository';
+import { MySQLRatingRepository }  from './infrastructure/repositories/MySQLRatingRepository';
+import { MySQLProductRepository } from './infrastructure/repositories/MySQLProductRepository';
 
 // ── Use Cases (Inventario) ─────────────────────────────────────────────────────
 import { SearchItems }       from './application/usecases/inventory/SearchItem';
@@ -36,6 +41,10 @@ import { createProductRoutes } from './infrastructure/http/routes/product.routes
 
 // ── Controladores con DI (Inventario) ──────────────────────────────────────────
 import { InventoryController } from './infrastructure/http/controllers/InventoryController';
+import { RatingController } from './infrastructure/http/controllers/RatingController';
+
+// ── Servicios ──────────────────────────────────────────────────────────────────
+import { RatingService } from './domain/services/RatingService';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TUS HÉROES - AGREGADO
@@ -67,19 +76,13 @@ const inventoryController = new InventoryController(
   new GetUserInventory(itemRepository),
 );
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── TUS HÉROES - INYECCIÓN ─────────────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════════════════
-const heroRepository = new MySQLHeroRepository();
+// Rating
+const ratingRepository   = new MySQLRatingRepository();
+const productRepository  = new MySQLProductRepository();
+const ratingService      = new RatingService(ratingRepository, productRepository);
+const ratingController   = new RatingController(ratingService);
 
-const heroController = new HeroController(
-  new CrearHeroe(heroRepository),
-  new ObtenerHeroes(heroRepository),
-  new ObtenerHeroePorId(heroRepository),
-  new ActualizarHeroe(heroRepository),
-  new EliminarHeroe(heroRepository)
-);
-
+// Auth helpers
 // ============================================================
 // EXPRESS APP
 // ============================================================
@@ -120,6 +123,7 @@ app.get('/health', (_req, res) => res.json({
 // ============================================================
 app.use('/api/v1/auth',     authRoutes);
 app.use('/api/v1/inventory', inventoryLimiter, createInventoryRoutes(inventoryController));
+app.use('/api/v1/products', createRatingRoutes(ratingController));
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── TUS RUTAS ────────────────────────────────────────────────────────
