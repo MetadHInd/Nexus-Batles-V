@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import './Navbar.css';
 
@@ -47,6 +48,7 @@ export default function Navbar() {
         </div>
 
         <div className="nav-right">
+          {/* Monedas */}
           <div className="nav-coins">
             ✦ 4,820 monedas
           </div>

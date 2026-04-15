@@ -26,7 +26,7 @@ import { MySQLItemRepository }    from './infrastructure/repositories/MySQLItemR
 import { MySQLRatingRepository }  from './infrastructure/repositories/MySQLRatingRepository';
 import { MySQLProductRepository } from './infrastructure/repositories/MySQLProductRepository';
 
-// ── Use Cases ─────────────────────────────────────────────────────────────────
+// ── Use Cases (Inventario) ─────────────────────────────────────────────────────
 import { SearchItems }       from './application/usecases/inventory/SearchItem';
 import { GetItems }          from './application/usecases/inventory/GetItem';
 import { GetItemById }       from './application/usecases/inventory/GetItemById';
@@ -36,19 +36,33 @@ import { UpdateItem }        from './application/usecases/inventory/UpdateItem';
 import { SoftDeleteItem }    from './application/usecases/inventory/SoftDeleteItem';
 import { ReactivateItem }    from './application/usecases/inventory/ReactivateItem';
 import { GetUserInventory }  from './application/usecases/inventory/GetUserInventory';
+//creamos el producti(son las aemas, raro,mitico...ect)
+import { createProductRoutes } from './infrastructure/http/routes/product.routes';
 
-// ── Controladores con DI ──────────────────────────────────────────────────────
+// ── Controladores con DI (Inventario) ──────────────────────────────────────────
 import { InventoryController } from './infrastructure/http/controllers/InventoryController';
 import { RatingController } from './infrastructure/http/controllers/RatingController';
 
 // ── Servicios ──────────────────────────────────────────────────────────────────
 import { RatingService } from './domain/services/RatingService';
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// TUS HÉROES - AGREGADO
+// ═══════════════════════════════════════════════════════════════════════════════
+import { MySQLHeroRepository } from './infrastructure/repositories/MySQLHeroRepository';
+import { HeroController } from './infrastructure/http/controllers/HeroController';
+import { CrearHeroe } from './application/usecases/Heroes/CrearHeroe';
+import { ObtenerHeroes } from './application/usecases/Heroes/ObtenerHeroes';
+import { ObtenerHeroePorId } from './application/usecases/Heroes/ObtenerHeroePorId';
+import { ActualizarHeroe } from './application/usecases/Heroes/ActualizarHeroe';
+import { EliminarHeroe } from './application/usecases/Heroes/EliminarHeroe';
+import { createHeroRoutes } from './infrastructure/http/routes/hero.routes';
+
 // ============================================================
 // INYECCIÓN DE DEPENDENCIAS
 // ============================================================
 
-// Inventario
+// ── Inventario ──────────────────────────────────────────────
 const itemRepository      = new MySQLItemRepository();
 const inventoryController = new InventoryController(
   new SearchItems(itemRepository),
@@ -74,13 +88,21 @@ const ratingController   = new RatingController(ratingService);
 // ============================================================
 const app = express();
 
+// ✅ PRIMERO: Middlewares de seguridad y CORS
 app.use(helmet());
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cors({ 
+  origin: 'http://localhost:5173', 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
+// ✅ SEGUNDO: Middlewares de parsing (con límite para imágenes)
 app.use(express.json({
+  limit: '50mb',
   verify: (req: any, _res, buf) => { req.rawBody = buf.toString(); },
 }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ── Rate limiting ──────────────────────────────────────────────────────────────
 const globalLimiter    = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true });
@@ -97,11 +119,17 @@ app.get('/health', (_req, res) => res.json({
 }));
 
 // ============================================================
-// RUTAS
+// RUTAS (TERCERO)
 // ============================================================
 app.use('/api/v1/auth',     authRoutes);
 app.use('/api/v1/inventory', inventoryLimiter, createInventoryRoutes(inventoryController));
 app.use('/api/v1/products', createRatingRoutes(ratingController));
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── TUS RUTAS ────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+app.use('/api/v1', createHeroRoutes(heroController));
+app.use('/api/v1', createProductRoutes());  // ✅ AHORA SÍ, después del CORS
 
 app.use(errorHandler);
 
@@ -120,6 +148,8 @@ async function bootstrap() {
       console.log('═'.repeat(70));
       console.log(` Servidor: http://localhost:${env.PORT}`);
       console.log(` Health:   GET http://localhost:${env.PORT}/health`);
+      console.log(` Heroes:   GET http://localhost:${env.PORT}/api/v1/heroes`);
+      console.log(` Products: GET http://localhost:${env.PORT}/api/v1/products`);
       console.log('═'.repeat(70));
     });
   } catch (err: any) {

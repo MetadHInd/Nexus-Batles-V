@@ -1,11 +1,10 @@
+// src/infrastructure/http/routes/hero.routes.ts
 import { Router } from "express";
-import multer from "multer";
 import { HeroController } from "../controllers/HeroController";
 import { authenticateJWT } from "../middlewares/auth.middleware";
 import { requireRole } from "../middlewares/roleMiddleware";
 
-export function createHeroRoutes(controller: HeroController) {
-
+export function createHeroRoutes(heroController: HeroController): Router {
   const router = Router();
   const upload = multer({ dest: "uploads/" });
 

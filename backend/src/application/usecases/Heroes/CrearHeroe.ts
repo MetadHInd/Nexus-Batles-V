@@ -1,19 +1,22 @@
+// src/application/usecases/Heroes/CrearHeroe.ts
+import { IHeroRepository } from "../../repositories/IHeroRepository";
 import { Heroe } from "../../../domain/entities/Heroe";
 
+interface CrearHeroeDTO {
+  name: string;
+  description: string;
+  price: number;
+  stars: number;
+  type: 'principal' | 'secundario' | 'Guerrero' | 'Mago' | 'Arquero' | 'Tanque' | 'Asesino';
+  image: string;
+}
+
 export class CrearHeroe {
+  constructor(private heroRepository: IHeroRepository) {}
 
-  constructor(private heroRepository: any) {}
-
-  async ejecutar(data: {
-    name: string;
-    description: string;
-    price: number;
-    stars: number;
-    type: 'principal' | 'secundario';
-    image: string;
-  }): Promise<Heroe> {
-
-    const hero = new Heroe(
+  async ejecutar(data: CrearHeroeDTO): Promise<Heroe> {
+    // Crear la entidad (esto valida automáticamente)
+    const heroe = new Heroe(
       null,
       data.name,
       data.description,
@@ -22,7 +25,8 @@ export class CrearHeroe {
       data.type,
       data.image
     );
-
-    return await this.heroRepository.create(hero);
+    
+    // Guardar en el repositorio
+    return await this.heroRepository.create(heroe);
   }
 }

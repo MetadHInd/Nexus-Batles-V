@@ -30,8 +30,6 @@ const envSchema = zod_1.z.object({
     REDIS_URL: zod_1.z.string().optional(),
     CORS_ORIGIN: zod_1.z.string(),
     LOG_LEVEL: zod_1.z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-    ADMIN_USERNAME: zod_1.z.string().default('AdminChatbot123'),
-    ADMIN_PASSWORD: zod_1.z.string().default('ChatbotAdmin123'),
 });
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
