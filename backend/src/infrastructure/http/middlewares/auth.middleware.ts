@@ -19,8 +19,16 @@ export const authenticateJWT = (
   next: NextFunction
 ): void => {
   const authHeader = req.headers.authorization;
+  
+  console.log('🔐 [auth.middleware] Headers recibidos:', {
+    authorization: authHeader ? `${authHeader.substring(0, 20)}...` : 'NO PRESENTE',
+    method: req.method,
+    url: req.url,
+    allHeaders: Object.keys(req.headers)
+  });
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.error('❌ [auth.middleware] Error: Token no proporcionado o formato incorrecto');
     res.status(401).json({ error: 'Token no proporcionado' });
     return;
   }
@@ -38,11 +46,17 @@ export const authenticateJWT = (
     return;
   }
 
+  // ✅ CORRECCIÓN: Extraer userId de 'sub' o 'userId' (compatible con AuthController.legacy)
+  const userId = decoded.userId || decoded.sub;
+  const rol = decoded.rol || decoded.role;
+  
+  console.log('✅ [auth.middleware] Token validado correctamente para usuario:', userId);
+
   req.user = {
-    userId: decoded.userId,
-    email: decoded.email,
-    apodo: decoded.apodo,
-    rol: decoded.rol,
+    userId: userId,
+    email: decoded.email || '',
+    apodo: decoded.apodo || '',
+    rol: rol,
   };
 
   next();

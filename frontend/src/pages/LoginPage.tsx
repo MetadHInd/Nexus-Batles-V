@@ -35,17 +35,36 @@ export default function LoginPage() {
         // Guardar el token
         const token = data.data?.accessToken || data.data?.token;
         const refreshToken = data.data?.refreshToken;
-        const user = data.data?.player || data.data?.user;
+        const player = data.data?.player || data.data?.user;
         
-        if (token) {
-          localStorage.setItem('accessToken', token);
-          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-          if (user) localStorage.setItem('user', JSON.stringify(user));
+        console.log('✅ [LoginPage] Respuesta exitosa:', { token: !!token, refreshToken: !!refreshToken, player: !!player });
+        console.log('✅ [LoginPage] Player data:', player);
+        
+        if (token && player) {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            localStorage.setItem('accessToken', token);
+            console.log('✅ [LoginPage] AccessToken guardado en localStorage:', token.substring(0, 20) + '...');
+            if (refreshToken) {
+              localStorage.setItem('refreshToken', refreshToken);
+              console.log('✅ [LoginPage] RefreshToken guardado en localStorage');
+            }
+            localStorage.setItem('user', JSON.stringify(player));
+            console.log('✅ [LoginPage] User guardado en localStorage');
+          } else {
+            console.error('❌ [LoginPage] localStorage no disponible');
+          }
           
-          setAuth(data.data);
+          // Enviar al store la estructura correcta: { accessToken, refreshToken, player }
+          setAuth({
+            accessToken: token,
+            refreshToken: refreshToken || '',
+            player: player
+          });
+          console.log('✅ [LoginPage] Auth store actualizado, navegando a dashboard');
           navigate('/dashboard');
         } else {
-          setError("No se recibió token de autenticación");
+          setError("No se recibió token o datos de usuario");
+          console.error('❌ [LoginPage] Token o player faltante');
         }
       } else {
         setError(data.message || data.error || "Credenciales incorrectas");

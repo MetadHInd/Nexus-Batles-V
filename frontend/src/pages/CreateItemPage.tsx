@@ -61,12 +61,22 @@ export default function CreateItemPage() {
     setLoading(true);
     setError(null);
     try {
+      console.log('📤 [CreateItemPage] Iniciando creación con datos:', form);
       const payload: CreateItemDTO = { ...form };
       if (!payload.imagen) delete payload.imagen;
-      await inventoryApi.createItem(payload);
+      console.log('📤 [CreateItemPage] Payload enviado:', payload);
+      
+      const response = await inventoryApi.createItem(payload);
+      
+      console.log('✅ [CreateItemPage] Respuesta recibida:', response);
+      alert('✅ Ítem creado exitosamente');
       navigate('/inventory');
     } catch (err) {
-      setError(getErrorMessage(err));
+      const errorMsg = getErrorMessage(err);
+      console.error('❌ [CreateItemPage] Error capturado:', err);
+      console.error('❌ [CreateItemPage] Error message:', errorMsg);
+      setError(errorMsg);
+      alert(`❌ Error: ${errorMsg}`);
     } finally {
       setLoading(false);
     }

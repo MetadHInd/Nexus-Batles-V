@@ -82,6 +82,16 @@ const productRepository  = new MySQLProductRepository();
 const ratingService      = new RatingService(ratingRepository, productRepository);
 const ratingController   = new RatingController(ratingService);
 
+// Heroes
+const heroRepository = new MySQLHeroRepository();
+const heroController = new HeroController(
+  new CrearHeroe(heroRepository),
+  new ObtenerHeroes(heroRepository),
+  new ObtenerHeroePorId(heroRepository),
+  new ActualizarHeroe(heroRepository),
+  new EliminarHeroe(heroRepository)
+);
+
 // Auth helpers
 // ============================================================
 // EXPRESS APP
@@ -105,9 +115,13 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ── Rate limiting ──────────────────────────────────────────────────────────────
-const globalLimiter    = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true });
-const sensitiveLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20,  standardHeaders: true });
-const inventoryLimiter = rateLimit({ windowMs: 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false, skipFailedRequests: true });
+const isDev = env.NODE_ENV === 'development';
+
+const noOpMiddleware = (req: any, res: any, next: any) => next();
+
+const globalLimiter    = isDev ? noOpMiddleware : rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true });
+const sensitiveLimiter = isDev ? noOpMiddleware : rateLimit({ windowMs: 15 * 60 * 1000, max: 20,  standardHeaders: true });
+const inventoryLimiter = isDev ? noOpMiddleware : rateLimit({ windowMs: 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false, skipFailedRequests: true });
 
 app.use('/api',             globalLimiter);
 app.use('/api/v1/auth',     sensitiveLimiter);

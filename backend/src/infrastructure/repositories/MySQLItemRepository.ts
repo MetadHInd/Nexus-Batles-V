@@ -159,8 +159,8 @@ export class MySQLItemRepository implements IItemRepository {
         nombre = ?, tipo = ?, rareza = ?, imagen = ?,
         descripcion = ?, habilidades = ?, efectos = ?,
         ataque = ?, defensa = ?, user_id = ?,
-        en_subasta = ?, en_mazo_activo = ?, updated_at = ?
-      WHERE id = ? AND activo = true`,
+        en_subasta = ?, en_mazo_activo = ?, activo = ?, deleted_at = ?, updated_at = ?
+      WHERE id = ?`,
       [
         props.nombre,
         props.tipo,
@@ -174,6 +174,8 @@ export class MySQLItemRepository implements IItemRepository {
         props.userId || null,
         props.enSubasta || false,
         props.enMazoActivo || false,
+        props.activo !== undefined ? props.activo : true,
+        props.deletedAt || null,
         new Date(),
         props.id
       ]

@@ -19,7 +19,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      isAuthenticated: !!localStorage.getItem('accessToken'),
+      isAuthenticated: typeof window !== 'undefined' && window.localStorage ? !!localStorage.getItem('accessToken') : false,
       user: null,
       player: null,
       refreshToken: null,
@@ -43,7 +43,9 @@ export const useAuthStore = create<AuthState>()(
 
         if (looksLikeTokens) {
           const tokens = payload;
-          localStorage.setItem('accessToken', tokens.accessToken);
+          if (typeof window !== 'undefined' && window.localStorage) {
+            localStorage.setItem('accessToken', tokens.accessToken);
+          }
           set({
             isAuthenticated: true,
             user: tokens.player,
@@ -69,7 +71,9 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           // Ignorar: si falla el backend, igual limpiamos sesión local.
         } finally {
-          localStorage.removeItem('accessToken');
+          if (typeof window !== 'undefined' && window.localStorage) {
+            localStorage.removeItem('accessToken');
+          }
           set({
             isAuthenticated: false,
             user: null,

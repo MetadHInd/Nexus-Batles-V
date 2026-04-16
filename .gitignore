@@ -67,3 +67,21 @@ build/
 # OS
 .DS_Store
 Thumbs.dbnode_modules/
+
+# ══════════════════════════════════════════════════════════════
+# SCRIPTS DE PRUEBA Y DEBUG (No subir a git)
+# ══════════════════════════════════════════════════════════════
+backend/create-admin-user.js
+backend/assign-items-to-prueba.js
+backend/create-test-user.js
+backend/verify-heroes-table.js
+backend/insert-heroes.js
+backend/describe-users.js
+backend/debug-inventory.js
+backend/generate-password.js
+backend/backend.log
+backend/*.test.js
+
+# Logs de desarrollo
+*.log
+backend.log

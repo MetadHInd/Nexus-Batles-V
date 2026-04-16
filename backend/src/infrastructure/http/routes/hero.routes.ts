@@ -1,5 +1,6 @@
 // src/infrastructure/http/routes/hero.routes.ts
 import { Router } from "express";
+import multer from "multer";
 import { HeroController } from "../controllers/HeroController";
 import { authenticateJWT } from "../middlewares/auth.middleware";
 import { requireRole } from "../middlewares/roleMiddleware";
@@ -12,13 +13,13 @@ export function createHeroRoutes(heroController: HeroController): Router {
   // 🔥 LISTAR HEROES
   router.get(
     "/heroes",
-    (req, res) => controller.listar(req, res)
+    (req, res) => heroController.listar(req, res)
   );
 
   // 🔥 OBTENER UN HEROE POR ID
   router.get(
     "/heroes/:id",
-    (req, res) => controller.obtenerPorId(req, res)
+    (req, res) => heroController.obtenerPorId(req, res)
   );
 
   // ========== CREAR HEROE (SOLO ADMIN) ==========
@@ -28,7 +29,7 @@ export function createHeroRoutes(heroController: HeroController): Router {
     authenticateJWT,
     requireRole(['ADMIN']),
     upload.single("imagen"),
-    (req, res) => controller.crear(req, res)
+    (req, res) => heroController.crear(req, res)
   );
 
   // ========== ACTUALIZAR HEROE (SOLO ADMIN) ==========
@@ -38,7 +39,7 @@ export function createHeroRoutes(heroController: HeroController): Router {
     authenticateJWT,
     requireRole(['ADMIN']),
     upload.single("imagen"),
-    (req, res) => controller.actualizar(req, res)
+    (req, res) => heroController.actualizar(req, res)
   );
 
   // ========== ELIMINAR HEROE (SOLO ADMIN) ==========
@@ -47,7 +48,7 @@ export function createHeroRoutes(heroController: HeroController): Router {
     "/heroes/:id",
     authenticateJWT,
     requireRole(['ADMIN']),
-    (req, res) => controller.eliminar(req, res)
+    (req, res) => heroController.eliminar(req, res)
   );
 
   return router;

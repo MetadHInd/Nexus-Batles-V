@@ -25,4 +25,13 @@ if (!parsed.success) {
   console.error('Variables de entorno invalidas:', parsed.error.flatten().fieldErrors);
   process.exit(1);
 }
+
+console.log('✅ [env.ts] Variables cargadas correctamente:', {
+  NODE_ENV: parsed.data.NODE_ENV,
+  DB_HOST: parsed.data.DB_HOST,
+  JWT_SECRET_LENGTH: parsed.data.JWT_SECRET.length,
+  JWT_REFRESH_SECRET_LENGTH: parsed.data.JWT_REFRESH_SECRET.length,
+  CORS_ORIGIN: parsed.data.CORS_ORIGIN
+});
+
 export const env = parsed.data;

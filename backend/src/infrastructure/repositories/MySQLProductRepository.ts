@@ -138,4 +138,15 @@ export class MySQLProductRepository {
   async delete(id: number): Promise<void> {
     await pool.query('DELETE FROM products WHERE id = ?', [id]);
   }
+
+  async updateStock(id: number, newStock: number): Promise<void> {
+    const [result] = await pool.query<ResultSetHeader>(
+      'UPDATE products SET stock = ?, updated_at = NOW() WHERE id = ?',
+      [newStock, id]
+    );
+    
+    if (result.affectedRows === 0) {
+      throw new Error(`Producto con id ${id} no encontrado`);
+    }
+  }
 }

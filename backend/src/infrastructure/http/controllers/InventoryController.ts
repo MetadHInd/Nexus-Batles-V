@@ -115,7 +115,12 @@ export class InventoryController {
     next: NextFunction
   ): Promise<void> => {
     try {
+      console.log('🔍 [InventoryController.create] Datos recibidos:', req.body);
+      console.log('🔍 [InventoryController.create] Usuario:', req.user);
+      
       const result = await this.createItem.execute(req.body);
+      
+      console.log('✅ [InventoryController.create] Item creado exitosamente:', result.id);
 
       logInventoryEvent('item.created', {
         itemId: result.id,
@@ -127,6 +132,7 @@ export class InventoryController {
         data: result
       });
     } catch (error) {
+      console.error('❌ [InventoryController.create] Error:', error);
       next(error);
     }
   };

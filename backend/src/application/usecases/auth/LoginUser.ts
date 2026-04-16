@@ -16,7 +16,7 @@ export class LoginUser {
   ) {}
 
   async execute(data: LoginDTO, ip: string, userAgent: string): Promise<{ 
-    user: any; 
+    player: any; 
     accessToken: string;
     refreshToken: string;
   }> {
@@ -68,14 +68,18 @@ export class LoginUser {
     // 4. Log exitoso
     logger.info('auth.login.success', {
       userId: user.id,
+      email: user.email,
+      rol: user.rol,
       ip,
       userAgent,
       success: true,
       timestamp: new Date().toISOString()
     });
 
+    console.log('✅ [LoginUser] Login exitoso para:', user.email, 'con token:', accessToken.substring(0, 20) + '...');
+
     return {
-      user: user.toPublic(),
+      player: user.toPublic(),
       accessToken,
       refreshToken
     };
